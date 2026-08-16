@@ -3,228 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Star1 — Research anything. | Huygens</title>
+    <title>Star1 — Research anything.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="landing-page">
+<body>
     <div class="paper-grain"></div>
 
-    <!-- Navigation -->
-    <nav class="landing-nav">
-        <div class="nav-brand">
-            <span class="nav-company">Huygens</span>
-            <span class="nav-separator">/</span>
-            <span class="nav-product">Star1</span>
-        </div>
-        <div class="nav-links">
-            <a href="#how-it-works">How it works</a>
-            <a href="#features">Features</a>
-            <a href="app.html" class="nav-cta">Open Star1</a>
-        </div>
-    </nav>
-
-    <!-- Hero -->
-    <section class="hero-section">
-        <div class="hero-content">
-            <div class="hero-star">
-                <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path class="doodle-draw" d="M60 8L66 46L108 52L72 78L84 116L60 92L36 116L48 78L12 52L54 46L60 8Z"
-                          stroke="#1D4533" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    <circle class="doodle-draw" cx="60" cy="60" r="6" stroke="#1D4533" stroke-width="1.5" fill="none"/>
-                    <path class="doodle-fade" d="M25 25C30 20 38 18 45 18" stroke="#1D4533" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
-                    <path class="doodle-fade" d="M95 95C90 100 82 102 75 102" stroke="#1D4533" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
-                    <circle class="doodle-fade" cx="95" cy="25" r="4" stroke="#5E3122" stroke-width="0.8" fill="none" opacity="0.25"/>
-                    <circle class="doodle-fade" cx="20" cy="85" r="3" stroke="#5E3122" stroke-width="0.8" fill="none" opacity="0.2"/>
+    <!-- Auth Gate -->
+    <div id="auth-gate" class="auth-gate">
+        <div class="auth-box">
+            <div class="auth-brand">
+                <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
+                    <path d="M24 4L26.5 18L40 24L26.5 30L24 44L21.5 30L8 24L21.5 18L24 4Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
                 </svg>
+                <h1>Star1</h1>
+                <p id="auth-subtitle">Sign in to your account</p>
             </div>
-            <h1 class="hero-title">Star1</h1>
-            <p class="hero-tagline">The rabbit hole is yours.</p>
-            <p class="hero-subtitle">
-                An autonomous research instrument. Give it a question, let it investigate the evidence,
-                and receive a carefully synthesized answer.
+
+            <div class="auth-form" id="auth-form">
+                <div class="form-group">
+                    <label for="auth-email">Email</label>
+                    <input type="email" id="auth-email" class="modal-input" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" class="modal-input" placeholder="••••••••">
+                </div>
+                
+                <button id="auth-submit" class="primary-btn full">Sign in</button>
+                
+                <div class="auth-toggle">
+                    <span id="auth-toggle-text">Don't have an account?</span>
+                    <button id="auth-toggle-btn" class="text-link">Sign up</button>
+                </div>
+                
+                <div id="auth-message" class="auth-message"></div>
+            </div>
+
+            <div class="auth-divider">
+                <span>or</span>
+            </div>
+
+            <button id="auth-github" class="github-btn full">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                Continue with GitHub
+            </button>
+
+            <p class="auth-hint">
+                Your research history syncs across devices.
             </p>
-            <div class="hero-cta">
-                <a href="app.html" class="hero-btn primary">Start researching</a>
-                <a href="#how-it-works" class="hero-btn secondary">See how it works</a>
+        </div>
+    </div>
+
+    <!-- App (hidden until auth) -->
+    <div id="app" class="app-hidden">
+
+        <!-- Landing State -->
+        <div id="landing" class="state active">
+            <header class="site-header">
+                <div class="company-mark">Huygens</div>
+                <div class="header-actions">
+                    <button id="open-settings" class="settings-btn" title="Settings">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 8.68 4.68a1.65 1.65 0 0 0 1.51-1H11a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                    </button>
+                    <button id="user-menu" class="user-btn" title="Account">
+                        <span id="user-avatar"></span>
+                    </button>
+                </div>
+            </header>
+
+            <main class="landing-main">
+                <div class="hero">
+                    <h1 class="logo-wordmark">
+                        <span class="star-mark">
+                            <svg viewBox="0 0 48 48" fill="none">
+                                <path class="doodle-path" d="M24 4L26.5 18L40 24L26.5 30L24 44L21.5 30L8 24L21.5 18L24 4Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
+                                <circle cx="24" cy="24" r="3" stroke="#1D4533" stroke-width="1.2" fill="none"/>
+                            </svg>
+                        </span>
+                        Star1
+                    </h1>
+                    <p class="tagline">The rabbit hole is yours.</p>
+                </div>
+
+                <div class="research-input-container">
+                    <div class="input-wrapper">
+                        <input type="text" id="research-question" class="research-input"
+                               placeholder="What would you like to understand?" autocomplete="off">
+                        <button id="submit-research" class="submit-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="example-prompts">
+                        <span class="examples-label">Try:</span>
+                        <button class="example-chip" data-question="Why did Concorde fail commercially?">Why did Concorde fail commercially?</button>
+                        <button class="example-chip" data-question="Compare nuclear fusion approaches in 2026.">Compare nuclear fusion approaches in 2026</button>
+                        <button class="example-chip" data-question="Research the history of solid-state batteries.">History of solid-state batteries</button>
+                        <button class="example-chip" data-question="Explain India's semiconductor strategy.">India's semiconductor strategy</button>
+                    </div>
+                </div>
+
+                <div class="recent-research" id="recent-research">
+                    <h3 class="recent-title">Your research</h3>
+                    <div class="recent-list" id="recent-list">
+                        <p class="recent-empty">No research yet. Ask something above.</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Researching State -->
+        <div id="researching" class="state">
+            <header class="research-header">
+                <div class="header-brand">
+                    <span class="mini-star">
+                        <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                            <path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
+                        </svg>
+                    </span>
+                    <span class="header-title">Star1</span>
+                </div>
+                <div class="job-id" id="job-id-display"></div>
+            </header>
+
+            <main class="researching-main">
+                <div class="question-display">
+                    <span class="question-label">Researching</span>
+                    <h2 id="active-question" class="active-question"></h2>
+                </div>
+
+                <div class="progress-track">
+                    <div class="progress-step" data-step="understand">
+                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.5"/></svg></div>
+                        <div class="step-content"><span class="step-name">Understanding the question</span><span class="step-desc">Identifying the main questions and comparison criteria</span></div>
+                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
+                    </div>
+                    <div class="progress-step" data-step="research">
+                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5"/></svg></div>
+                        <div class="step-content"><span class="step-name">Researching sources</span><span class="step-desc">Searching academic, institutional, industry and primary sources</span></div>
+                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
+                    </div>
+                    <div class="progress-step" data-step="crosscheck">
+                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+                        <div class="step-content"><span class="step-name">Cross-checking evidence</span><span class="step-desc">Comparing conflicting claims and checking dates</span></div>
+                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
+                    </div>
+                    <div class="progress-step" data-step="synthesize">
+                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+                        <div class="step-content"><span class="step-name">Synthesizing findings</span><span class="step-desc">Combining the evidence into a coherent answer</span></div>
+                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
+                    </div>
+                    <div class="progress-step" data-step="write">
+                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M12 20h9" stroke="currentColor" stroke-width="1.5"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+                        <div class="step-content"><span class="step-name">Writing the report</span><span class="step-desc">Structuring the research into a useful document</span></div>
+                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
+                    </div>
+                </div>
+
+                <div class="cancel-area">
+                    <button id="cancel-research" class="text-btn">Cancel</button>
+                </div>
+            </main>
+        </div>
+
+        <!-- Report State -->
+        <div id="report" class="state">
+            <header class="report-header">
+                <div class="header-brand">
+                    <span class="mini-star"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z" stroke="#1D4533" stroke-width="1.5" fill="none"/></svg></span>
+                    <span class="header-title">Star1</span>
+                </div>
+                <button id="new-research" class="new-research-btn">New research</button>
+            </header>
+            <main class="report-main">
+                <article id="report-content" class="report-article"></article>
+            </main>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content wide">
+                <h3 class="modal-title">Settings</h3>
+
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="github">GitHub</button>
+                    <button class="settings-tab" data-tab="supabase">Supabase</button>
+                    <button class="settings-tab" data-tab="account">Account</button>
+                </div>
+
+                <div class="settings-panel active" data-panel="github">
+                    <div class="form-group">
+                        <label for="github-pat">GitHub Personal Access Token</label>
+                        <input type="password" id="github-pat" class="modal-input" placeholder="ghp_xxxxxxxxxxxx">
+                        <span class="input-hint">Needs <code>repo</code> and <code>actions</code> scope. <a href="https://github.com/settings/tokens/new?scopes=repo,actions&description=Star1" target="_blank" rel="noopener">Create one →</a></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="github-repo">Repository</label>
+                        <input type="text" id="github-repo" class="modal-input" placeholder="username/star1">
+                        <span class="input-hint">The repo where Winery runs.</span>
+                    </div>
+                    <button id="test-connection" class="secondary-btn">Test connection</button>
+                    <div id="test-result" class="test-result"></div>
+                </div>
+
+                <div class="settings-panel" data-panel="supabase">
+                    <div class="form-group">
+                        <label for="sb-url">Supabase URL</label>
+                        <input type="text" id="sb-url" class="modal-input" placeholder="https://xxxx.supabase.co">
+                    </div>
+                    <div class="form-group">
+                        <label for="sb-key">Supabase Anon Key</label>
+                        <input type="password" id="sb-key" class="modal-input" placeholder="eyJ...">
+                        <span class="input-hint">Found in Supabase Dashboard → Project Settings → API.</span>
+                    </div>
+                    <button id="save-supabase" class="secondary-btn">Save & Connect</button>
+                    <div id="sb-test-result" class="test-result"></div>
+                </div>
+
+                <div class="settings-panel" data-panel="account">
+                    <p class="modal-desc">Signed in as <strong id="account-email">—</strong>.</p>
+                    <button id="sign-out" class="secondary-btn">Sign out</button>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="save-settings" class="primary-btn">Save all settings</button>
+                </div>
             </div>
         </div>
-        <div class="hero-doodles">
-            <svg class="telescope-hero" viewBox="0 0 160 160" fill="none">
-                <path d="M30 130 L55 80 L105 65 L130 40" stroke="#5E3122" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.2"/>
-                <path d="M100 60 L125 35 L138 48 L113 73 Z" stroke="#5E3122" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.2"/>
-                <circle cx="45" cy="35" r="10" stroke="#1D4533" stroke-width="0.8" fill="none" opacity="0.15"/>
-                <path d="M70 20 Q78 12 86 20" stroke="#1D4533" stroke-width="0.8" stroke-linecap="round" fill="none" opacity="0.15"/>
-            </svg>
-        </div>
-    </section>
+    </div>
 
-    <!-- How it works -->
-    <section class="section" id="how-it-works">
-        <div class="section-inner">
-            <h2 class="section-title">How it works</h2>
-            <div class="steps">
-                <div class="step-card">
-                    <div class="step-number">01</div>
-                    <h3>Ask a question</h3>
-                    <p>Anything you're curious about. "Why did Concorde fail?" "Compare fusion approaches." No topic is too niche.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-number">02</div>
-                    <h3>Star1 investigates</h3>
-                    <p>It plans searches, finds sources, fetches pages, cross-checks claims, and synthesizes evidence — all automatically.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-number">03</div>
-                    <h3>Get your report</h3>
-                    <p>A structured research document with key findings, evidence assessment, confidence notes, and cited sources.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pipeline -->
-    <section class="section pipeline-section">
-        <div class="section-inner">
-            <h2 class="section-title">The research pipeline</h2>
-            <div class="pipeline">
-                <div class="pipeline-step">
-                    <div class="pipeline-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </div>
-                    <span>Understand</span>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-step">
-                    <div class="pipeline-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </div>
-                    <span>Research</span>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-step">
-                    <div class="pipeline-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                    </div>
-                    <span>Cross-check</span>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-step">
-                    <div class="pipeline-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-                    </div>
-                    <span>Synthesize</span>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-step">
-                    <div class="pipeline-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M12 20h9" stroke="currentColor" stroke-width="1.5"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-                    </div>
-                    <span>Write</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features -->
-    <section class="section" id="features">
-        <div class="section-inner">
-            <h2 class="section-title">Built for serious research</h2>
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#1D4533" stroke-width="1.5" fill="none"/><polyline points="14 2 14 8 20 8" stroke="#1D4533" stroke-width="1.5" fill="none"/></svg>
-                    </div>
-                    <h3>Evidence first</h3>
-                    <p>Every claim is traceable to a source. No hallucinated citations. No fabricated facts.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><circle cx="12" cy="12" r="10" stroke="#1D4533" stroke-width="1.5" fill="none"/><path d="M12 16v-4M12 8h.01" stroke="#1D4533" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </div>
-                    <h3>Honest uncertainty</h3>
-                    <p>When evidence is mixed or insufficient, Star1 says so. Accuracy beats sounding certain.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#1D4533" stroke-width="1.5" fill="none"/></svg>
-                    </div>
-                    <h3>Source provenance</h3>
-                    <p>Primary and secondary sources clearly distinguished. Click through to verify.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M12 2v20M2 12h20" stroke="#1D4533" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </div>
-                    <h3>Zero cost</h3>
-                    <p>Runs on GitHub Actions with an open-source model. No API bills. No subscriptions.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Example preview -->
-    <section class="section example-section">
-        <div class="section-inner">
-            <h2 class="section-title">What you get</h2>
-            <div class="example-report">
-                <div class="example-header">
-                    <span class="example-label">Example output</span>
-                    <h3>The Commercial Failure of the Concorde</h3>
-                </div>
-                <div class="example-body">
-                    <div class="example-exec">
-                        <strong>Executive summary</strong>
-                        <p>The Concorde's commercial failure stemmed from a combination of high operational costs, economic unviability, safety concerns, and political factors.</p>
-                    </div>
-                    <div class="example-findings">
-                        <div class="example-finding">
-                            <span class="ex-num">01</span>
-                            <span class="ex-title">Economic Unviability</span>
-                        </div>
-                        <div class="example-finding">
-                            <span class="ex-num">02</span>
-                            <span class="ex-title">Safety Concerns</span>
-                        </div>
-                        <div class="example-finding">
-                            <span class="ex-num">03</span>
-                            <span class="ex-title">Political and Market Factors</span>
-                        </div>
-                    </div>
-                    <div class="example-sources">
-                        <span class="ex-source-tag">4 sources</span>
-                        <span class="ex-source-tag">0 primary · 4 secondary</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA -->
-    <section class="section cta-section">
-        <div class="section-inner">
-            <h2 class="cta-title">Ready to investigate?</h2>
-            <p class="cta-subtitle">Your first research question is waiting.</p>
-            <a href="app.html" class="hero-btn primary large">Open Star1</a>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="landing-footer">
-        <div class="footer-inner">
-            <div class="footer-brand">
-                <span class="footer-star">
-                    <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
-                        <path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
-                    </svg>
-                </span>
-                <span>Star1</span>
-            </div>
-            <p class="footer-by">An autonomous research instrument by <strong>Huygens</strong>.</p>
-            <p class="footer-copy">© 2026 Huygens. Personal use only.</p>
-        </div>
-    </footer>
+    <script src="assets/app.js"></script>
 </body>
 </html>

@@ -21,15 +21,25 @@
                     <path d="M24 4L26.5 18L40 24L26.5 30L24 44L21.5 30L8 24L21.5 18L24 4Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
                 </svg>
                 <h1>Star1</h1>
-                <p>Sign in to start researching.</p>
+                <p id="auth-subtitle">Sign in to your account</p>
             </div>
 
             <div class="auth-form" id="auth-form">
                 <div class="form-group">
                     <label for="auth-email">Email</label>
-                    <input type="email" id="auth-email" class="modal-input" placeholder="you@example.com">
+                    <input type="email" id="auth-email" class="modal-input" placeholder="you@example.com" autocomplete="email">
                 </div>
-                <button id="auth-magic-link" class="primary-btn full">Send magic link</button>
+                <div class="form-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" class="modal-input" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <button type="button" id="auth-submit" class="primary-btn full">Sign in</button>
+                
+                <div class="auth-toggle">
+                    <span id="auth-toggle-text">Don't have an account?</span>
+                    <button type="button" id="auth-toggle-btn" class="text-link">Sign up</button>
+                </div>
+
                 <div id="auth-message" class="auth-message"></div>
             </div>
 
@@ -37,7 +47,7 @@
                 <span>or</span>
             </div>
 
-            <button id="auth-github" class="github-btn full">
+            <button type="button" id="auth-github" class="github-btn full">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
                 </svg>
@@ -45,8 +55,7 @@
             </button>
 
             <p class="auth-hint">
-                Your research history syncs across devices.<br>
-                <a href="index.html">← Back to landing page</a>
+                Your research history syncs across devices.
             </p>
         </div>
     </div>
@@ -59,13 +68,13 @@
             <header class="site-header">
                 <div class="company-mark">Huygens</div>
                 <div class="header-actions">
-                    <button id="open-settings" class="settings-btn" title="Settings">
+                    <button type="button" id="open-settings" class="settings-btn" title="Settings">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                             <circle cx="12" cy="12" r="3"/>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 8.68 4.68a1.65 1.65 0 0 0 1.51-1H11a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                         </svg>
                     </button>
-                    <button id="user-menu" class="user-btn" title="Account">
+                    <button type="button" id="user-menu" class="user-btn" title="Account">
                         <span id="user-avatar"></span>
                     </button>
                 </div>
@@ -89,7 +98,7 @@
                     <div class="input-wrapper">
                         <input type="text" id="research-question" class="research-input"
                                placeholder="What would you like to understand?" autocomplete="off">
-                        <button id="submit-research" class="submit-btn">
+                        <button type="button" id="submit-research" class="submit-btn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                                 <polyline points="12 5 19 12 12 19"></polyline>
@@ -99,10 +108,10 @@
 
                     <div class="example-prompts">
                         <span class="examples-label">Try:</span>
-                        <button class="example-chip" data-question="Why did Concorde fail commercially?">Why did Concorde fail commercially?</button>
-                        <button class="example-chip" data-question="Compare nuclear fusion approaches in 2026.">Compare nuclear fusion approaches in 2026</button>
-                        <button class="example-chip" data-question="Research the history of solid-state batteries.">History of solid-state batteries</button>
-                        <button class="example-chip" data-question="Explain India's semiconductor strategy.">India's semiconductor strategy</button>
+                        <button type="button" class="example-chip" data-question="Why did Concorde fail commercially?">Why did Concorde fail commercially?</button>
+                        <button type="button" class="example-chip" data-question="Compare nuclear fusion approaches in 2026.">Compare nuclear fusion approaches in 2026</button>
+                        <button type="button" class="example-chip" data-question="Research the history of solid-state batteries.">History of solid-state batteries</button>
+                        <button type="button" class="example-chip" data-question="Explain India's semiconductor strategy.">India's semiconductor strategy</button>
                     </div>
                 </div>
 
@@ -164,7 +173,7 @@
                 </div>
 
                 <div class="cancel-area">
-                    <button id="cancel-research" class="text-btn">Cancel</button>
+                    <button type="button" id="cancel-research" class="text-btn">Cancel</button>
                 </div>
             </main>
         </div>
@@ -176,7 +185,7 @@
                     <span class="mini-star"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z" stroke="#1D4533" stroke-width="1.5" fill="none"/></svg></span>
                     <span class="header-title">Star1</span>
                 </div>
-                <button id="new-research" class="new-research-btn">New research</button>
+                <button type="button" id="new-research" class="new-research-btn">New research</button>
             </header>
             <main class="report-main">
                 <article id="report-content" class="report-article"></article>
@@ -190,9 +199,9 @@
                 <h3 class="modal-title">Settings</h3>
 
                 <div class="settings-tabs">
-                    <button class="settings-tab active" data-tab="github">GitHub</button>
-                    <button class="settings-tab" data-tab="supabase">Supabase</button>
-                    <button class="settings-tab" data-tab="account">Account</button>
+                    <button type="button" class="settings-tab active" data-tab="github">GitHub</button>
+                    <button type="button" class="settings-tab" data-tab="supabase">Supabase</button>
+                    <button type="button" class="settings-tab" data-tab="account">Account</button>
                 </div>
 
                 <div class="settings-panel active" data-panel="github">
@@ -206,7 +215,7 @@
                         <input type="text" id="github-repo" class="modal-input" placeholder="username/star1">
                         <span class="input-hint">The repo where Winery runs.</span>
                     </div>
-                    <button id="test-connection" class="secondary-btn">Test connection</button>
+                    <button type="button" id="test-connection" class="secondary-btn">Test connection</button>
                     <div id="test-result" class="test-result"></div>
                 </div>
 
@@ -220,17 +229,17 @@
                         <input type="password" id="sb-key" class="modal-input" placeholder="eyJ...">
                         <span class="input-hint">Found in Supabase Dashboard → Project Settings → API.</span>
                     </div>
-                    <button id="save-supabase" class="secondary-btn">Save & Connect</button>
+                    <button type="button" id="save-supabase" class="secondary-btn">Save & Connect</button>
                     <div id="sb-test-result" class="test-result"></div>
                 </div>
 
                 <div class="settings-panel" data-panel="account">
                     <p class="modal-desc">Signed in as <strong id="account-email">—</strong>.</p>
-                    <button id="sign-out" class="secondary-btn">Sign out</button>
+                    <button type="button" id="sign-out" class="secondary-btn">Sign out</button>
                 </div>
 
                 <div class="modal-actions">
-                    <button id="save-settings" class="primary-btn">Save all settings</button>
+                    <button type="button" id="save-settings" class="primary-btn">Save all settings</button>
                 </div>
             </div>
         </div>

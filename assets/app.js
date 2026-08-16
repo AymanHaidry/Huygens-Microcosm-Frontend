@@ -1,6 +1,5 @@
-/* ─── Star1 Frontend v4.2 ───
+/* ─── Nanofossil Frontend v2 ───
    Supabase Auth + DB + GitHub Actions
-   Conventional email/password auth
 */
 
 const CONFIG = {
@@ -9,7 +8,6 @@ const CONFIG = {
     githubApi: 'https://api.github.com'
 };
 
-// ─── Hardcoded Supabase Credentials ───
 const SUPABASE_DEFAULTS = {
     url: 'https://cknkncrnfdxqdcvwsdtz.supabase.co',
     key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrbmtuY3JuZmR4cWRjdndzZHR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODUyMjcsImV4cCI6MjEwMjQ2MTIyN30.6kwPURKaYq5GfRuCoQjY6YjIDqwaGEJxvBqHL8jCVf4'
@@ -20,7 +18,7 @@ let currentUser = null;
 let currentJob = null;
 let pollTimer = null;
 let pollCount = 0;
-let authMode = 'login'; // 'login' | 'signup'
+let authMode = 'login';
 
 // ─── Supabase Init ───
 
@@ -41,7 +39,6 @@ function initSupabase() {
     if (!url || !key) return false;
     try {
         supabase = window.supabase.createClient(url, key);
-        console.log('Supabase initialized');
         return true;
     } catch (e) {
         console.error('Supabase init failed:', e);
@@ -52,15 +49,10 @@ function initSupabase() {
 // ─── Auth ───
 
 async function checkAuth() {
-    if (!supabase) {
-        showAuthGate();
-        return;
-    }
-
+    if (!supabase) { showAuthGate(); return; }
     try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
-
         if (session?.user) {
             currentUser = session.user;
             showApp();
@@ -76,17 +68,23 @@ async function checkAuth() {
 }
 
 function showAuthGate() {
-    document.getElementById('auth-gate').classList.remove('hidden');
-    document.getElementById('app').classList.add('app-hidden');
+    const gate = document.getElementById('auth-gate');
+    const app = document.getElementById('app');
+    if (gate) gate.classList.remove('hidden');
+    if (app) app.classList.add('app-hidden');
 }
 
 function showApp() {
-    document.getElementById('auth-gate').classList.add('hidden');
-    document.getElementById('app').classList.remove('app-hidden');
-    document.getElementById('account-email').textContent = currentUser?.email || '—';
+    const gate = document.getElementById('auth-gate');
+    const app = document.getElementById('app');
+    if (gate) gate.classList.add('hidden');
+    if (app) app.classList.remove('app-hidden');
+
+    const accountEmail = document.getElementById('account-email');
+    if (accountEmail) accountEmail.textContent = currentUser?.email || '—';
 
     const avatar = document.getElementById('user-avatar');
-    if (currentUser?.email) {
+    if (avatar && currentUser?.email) {
         avatar.textContent = currentUser.email.charAt(0).toUpperCase();
     }
 }
@@ -99,8 +97,7 @@ async function signIn(email, password) {
 async function signUp(email, password) {
     if (!supabase) return { error: new Error('Supabase not configured') };
     return await supabase.auth.signUp({
-        email,
-        password,
+        email, password,
         options: { emailRedirectTo: window.location.href }
     });
 }
@@ -120,25 +117,22 @@ async function signOut() {
     showAuthGate();
 }
 
-// ─── User Profile ───
+// ─── Profile ───
 
 async function loadUserProfile() {
     if (!supabase || !currentUser) return;
-
     try {
         const { data, error } = await supabase
             .from('profiles')
             .select('github_repo')
             .eq('id', currentUser.id)
             .single();
-
         if (data?.github_repo) {
-            document.getElementById('github-repo').value = data.github_repo;
+            const repoInput = document.getElementById('github-repo');
+            if (repoInput) repoInput.value = data.github_repo;
             localStorage.setItem('star1_repo', data.github_repo);
         }
-    } catch (e) {
-        console.error('Profile load error:', e);
-    }
+    } catch (e) { console.error('Profile load error:', e); }
 }
 
 async function saveUserProfile(githubRepo) {
@@ -149,16 +143,13 @@ async function saveUserProfile(githubRepo) {
             github_repo: githubRepo,
             updated_at: new Date().toISOString()
         });
-    } catch (e) {
-        console.error('Profile save error:', e);
-    }
+    } catch (e) { console.error('Profile save error:', e); }
 }
 
-// ─── Research Jobs ───
+// ─── Research Jobs DB ───
 
 async function createResearchJob(question, githubRunId) {
     if (!supabase || !currentUser) return null;
-
     try {
         const { data, error } = await supabase
             .from('research_jobs')
@@ -170,7 +161,6 @@ async function createResearchJob(question, githubRunId) {
             })
             .select()
             .single();
-
         if (error) throw error;
         return data;
     } catch (e) {
@@ -183,14 +173,11 @@ async function updateResearchJob(jobId, updates) {
     if (!supabase) return;
     try {
         await supabase.from('research_jobs').update(updates).eq('id', jobId);
-    } catch (e) {
-        console.error('DB update error:', e);
-    }
+    } catch (e) { console.error('DB update error:', e); }
 }
 
 async function fetchResearchHistory() {
     if (!supabase || !currentUser) return [];
-
     try {
         const { data, error } = await supabase
             .from('research_jobs')
@@ -198,7 +185,6 @@ async function fetchResearchHistory() {
             .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false })
             .limit(20);
-
         if (error) throw error;
         return data || [];
     } catch (e) {
@@ -224,7 +210,6 @@ function saveGitHubSettings(pat, repo) {
 async function githubRequest(endpoint, options = {}) {
     const { pat } = getGitHubSettings();
     const url = `${CONFIG.githubApi}${endpoint}`;
-
     const res = await fetch(url, {
         ...options,
         headers: {
@@ -234,12 +219,10 @@ async function githubRequest(endpoint, options = {}) {
             ...options.headers
         }
     });
-
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || `GitHub API error: ${res.status}`);
     }
-
     return res.json();
 }
 
@@ -255,14 +238,9 @@ async function triggerResearch(question) {
     await new Promise(r => setTimeout(r, 4000));
 
     const runs = await githubRequest(`/repos/${owner}/${repoName}/actions/runs?event=workflow_dispatch&per_page=5`);
-    const run = runs.workflow_runs.find(r =>
-        r.name === 'Star1' && r.status !== 'completed'
-    );
+    const run = runs.workflow_runs.find(r => r.name === 'Star1' && r.status !== 'completed');
 
-    if (!run) {
-        return { id: `job-${Date.now()}`, runId: null };
-    }
-
+    if (!run) return { id: `job-${Date.now()}`, runId: null };
     return { id: run.id.toString(), runId: run.id };
 }
 
@@ -285,11 +263,10 @@ async function checkJobStatus(runId) {
             return { status: 'failed', error: `Research job failed: ${run.conclusion}` };
         }
     }
-
     return { status: 'running', runStatus: run.status };
 }
 
-// ─── UI Updates ───
+// ─── UI ───
 
 function showState(stateId) {
     document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
@@ -318,9 +295,7 @@ function updateProgress(runStatus) {
 }
 
 function resetProgress() {
-    ['understand', 'research', 'crosscheck', 'synthesize', 'write'].forEach(step => {
-        setStepState(step, 'pending');
-    });
+    ['understand', 'research', 'crosscheck', 'synthesize', 'write'].forEach(s => setStepState(s, 'pending'));
 }
 
 async function renderRecentResearch() {
@@ -328,7 +303,6 @@ async function renderRecentResearch() {
     if (!container) return;
 
     const items = await fetchResearchHistory();
-
     if (items.length === 0) {
         container.innerHTML = '<p class="recent-empty">No research yet. Ask something above.</p>';
         return;
@@ -343,7 +317,7 @@ async function renderRecentResearch() {
                     <div class="recent-item-question">${escapeHtml(item.question)}</div>
                     <div class="recent-item-meta">${item.status} · ${date}</div>
                 </div>
-                <svg class="recent-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="recent-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <polyline points="9 18 15 12 9 6"/>
                 </svg>
             </button>
@@ -364,9 +338,7 @@ async function loadPastResearch(jobId, runId) {
                 showState('report');
                 return;
             }
-        } catch (e) {
-            console.error('Load from DB failed:', e);
-        }
+        } catch (e) { console.error('DB load failed:', e); }
     }
 
     if (runId) {
@@ -374,16 +346,17 @@ async function loadPastResearch(jobId, runId) {
         const [owner, repoName] = repo.split('/');
         try {
             const content = await githubRequest(`/repos/${owner}/${repoName}/contents/results/${runId}.json`);
-            const decoded = JSON.parse(atob(content.content));
-            if (decoded.report) {
-                renderReport(decoded);
-                showState('report');
-                if (supabase && jobId) {
-                    await updateResearchJob(jobId, { result_json: decoded.report, status: 'complete' });
+                const decoded = JSON.parse(atob(content.content));
+                if (decoded.report) {
+                    renderReport(decoded);
+                    showState('report');
+                    if (supabase && jobId) {
+                        await updateResearchJob(jobId, { result_json: decoded.report, status: 'complete' });
+                    }
                 }
+            } catch (e) {
+                alert('Could not load this research result.');
             }
-        } catch (e) {
-            alert('Could not load this research result.');
         }
     }
 }
@@ -397,7 +370,7 @@ function renderReport(data) {
     if (!data || !data.report) {
         container.innerHTML = `
             <div class="error-banner">
-                <h3>Star1 couldn't complete the research.</h3>
+                <h3>Nanofossil couldn't complete the research.</h3>
                 <p>The result file was empty or malformed.</p>
                 <button type="button" class="retry-btn" onclick="location.reload()">Try again</button>
                 <button type="button" class="change-btn" onclick="showState('landing')">Change the question</button>
@@ -414,7 +387,7 @@ function renderReport(data) {
     let html = `
         <h1 class="report-title">${escapeHtml(r.title || 'Research Report')}</h1>
         <div class="report-meta">
-            <span>Star1</span>
+            <span>Nanofossil</span>
             <span>·</span>
             <span>${date}</span>
             <span>·</span>
@@ -469,7 +442,7 @@ function renderReport(data) {
     if (r.confidence_notes) {
         html += `
             <div class="confidence-note">
-                <svg class="confidence-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="confidence-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="16" x2="12" y2="12"/>
                     <line x1="12" y1="8" x2="12.01" y2="8"/>
@@ -488,7 +461,7 @@ function renderReport(data) {
                 <button type="button" class="sources-toggle" onclick="this.nextElementSibling.classList.toggle('open')">
                     Sources
                     <span class="sources-count">${r.sources.length} · ${primaryCount} primary · ${secondaryCount} secondary</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <polyline points="6 9 12 15 18 9"/>
                     </svg>
                 </button>
@@ -568,7 +541,7 @@ async function pollJob() {
         } else if (status.status === 'failed') {
             clearInterval(pollTimer);
             pollTimer = null;
-            showError(status.error || "Star1 couldn't complete the research.");
+            showError(status.error || "Nanofossil couldn't complete the research.");
             if (currentJob.dbId) {
                 await updateResearchJob(currentJob.dbId, { status: 'failed' });
             }
@@ -584,7 +557,7 @@ function showError(message) {
     if (!container) return;
     container.innerHTML = `
         <div class="error-banner">
-            <h3>Star1 couldn't complete the research.</h3>
+            <h3>Nanofossil couldn't complete the research.</h3>
             <p>${escapeHtml(message)}</p>
             <button type="button" class="retry-btn" onclick="location.reload()">Try again</button>
             <button type="button" class="change-btn" onclick="showState('landing')">Change the question</button>
@@ -731,7 +704,7 @@ async function testSupabase() {
 // ─── Init ───
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Star1 initializing...');
+    console.log('Nanofossil initializing...');
 
     // Init Supabase
     const sbConfig = getSupabaseConfig();
@@ -821,7 +794,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 authMessage.textContent = error.message;
                 authMessage.className = 'auth-message error';
             } else if (data?.session) {
-                // Auto-signed in
                 currentUser = data.user;
                 showApp();
                 loadUserProfile();
@@ -944,16 +916,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Save Supabase
     const saveSbBtn = document.getElementById('save-supabase');
-    if (saveSbBtn) saveSbBtn.addEventListener('click', async () => {
-        const url = sbUrlInput ? sbUrlInput.value.trim() : '';
-        const key = sbKeyInput ? sbKeyInput.value.trim() : '';
-        if (url && key) {
-            saveSupabaseConfig(url, key);
-            initSupabase();
-            await testSupabase();
-            checkAuth();
-        }
-    });
+    if (saveSbBtn) {
+        saveSbBtn.addEventListener('click', async () => {
+            const url = sbUrlInput ? sbUrlInput.value.trim() : '';
+            const key = sbKeyInput ? sbKeyInput.value.trim() : '';
+            if (url && key) {
+                saveSupabaseConfig(url, key);
+                initSupabase();
+                await testSupabase();
+                checkAuth();
+            }
+        });
+    }
 
     // Sign out
     const signOutBtn = document.getElementById('sign-out');
@@ -968,5 +942,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    console.log('Star1 ready.');
+    console.log('Nanofossil ready.');
 });

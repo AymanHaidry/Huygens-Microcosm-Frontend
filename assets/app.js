@@ -1,8 +1,8 @@
-/* ─── Nanofossil Frontend v4 ───
+/* ─── Star1 Frontend v4.1 ───
    Supabase Auth + DB + GitHub Actions integration
+   Conventional email/password auth
 */
 
-// ─── Config ───
 const CONFIG = {
     pollInterval: 10000,
     maxPolls: 90,
@@ -20,6 +20,7 @@ let currentUser = null;
 let currentJob = null;
 let pollTimer = null;
 let pollCount = 0;
+let authMode = 'login'; // 'login' | 'signup'
 
 // ─── Supabase Init ───
 
@@ -88,13 +89,20 @@ function showApp() {
     }
 }
 
-async function signInWithMagicLink(email) {
+async function signIn(email, password) {
     if (!supabase) return { error: new Error('Supabase not configured') };
-    const { error } = await supabase.auth.signInWithOtp({
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return { data, error };
+}
+
+async function signUp(email, password) {
+    if (!supabase) return { error: new Error('Supabase not configured') };
+    const { data, error } = await supabase.auth.signUp({
         email,
+        password,
         options: { emailRedirectTo: window.location.href }
     });
-    return { error };
+    return { data, error };
 }
 
 async function signInWithGitHub() {
@@ -347,7 +355,6 @@ async function renderRecentResearch() {
 }
 
 async function loadPastResearch(jobId, runId) {
-    // First try to load from Supabase result_json
     if (supabase && jobId) {
         const { data } = await supabase.from('research_jobs').select('*').eq('id', jobId).single();
         if (data?.result_json) {
@@ -357,7 +364,6 @@ async function loadPastResearch(jobId, runId) {
         }
     }
 
-    // Fallback: fetch from GitHub repo
     if (runId) {
         const { repo } = getGitHubSettings();
         const [owner, repoName] = repo.split('/');
@@ -367,7 +373,6 @@ async function loadPastResearch(jobId, runId) {
             if (decoded.report) {
                 renderReport(decoded);
                 showState('report');
-                // Save to DB for next time
                 if (supabase && jobId) {
                     await updateResearchJob(jobId, { result_json: decoded.report, status: 'complete' });
                 }
@@ -386,7 +391,7 @@ function renderReport(data) {
     if (!data || !data.report) {
         container.innerHTML = `
             <div class="error-banner">
-                <h3>Nanofossil couldn't complete the research.</h3>
+                <h3>Star1 couldn't complete the research.</h3>
                 <p>The result file was empty or malformed.</p>
                 <button class="retry-btn" onclick="location.reload()">Try again</button>
                 <button class="change-btn" onclick="showState('landing')">Change the question</button>
@@ -554,7 +559,7 @@ async function pollJob() {
             }
         } else if (status.status === 'failed') {
             clearInterval(pollTimer);
-            showError(status.error || "Nanofossil couldn't complete the research.");
+            showError(status.error || "Star1 couldn't complete the research.");
             if (currentJob.dbId) {
                 await updateResearchJob(currentJob.dbId, { status: 'failed' });
             }
@@ -569,7 +574,7 @@ function showError(message) {
     const container = document.getElementById('report-content');
     container.innerHTML = `
         <div class="error-banner">
-            <h3>Nanofossil couldn't complete the research.</h3>
+            <h3>Star1 couldn't complete the research.</h3>
             <p>${escapeHtml(message)}</p>
             <button class="retry-btn" onclick="location.reload()">Try again</button>
             <button class="change-btn" onclick="showState('landing')">Change the question</button>
@@ -604,7 +609,6 @@ async function startResearch(question) {
         currentJob = job;
         document.getElementById('job-id-display').textContent = `Job #${job.id}`;
 
-        // Save to Supabase
         if (supabase && currentUser) {
             const dbJob = await createResearchJob(question, job.runId);
             if (dbJob) currentJob.dbId = dbJob.id;
@@ -718,30 +722,90 @@ document.addEventListener('DOMContentLoaded', () => {
         showAuthGate();
     }
 
-    // Pre-fill settings (hardcoded values + any saved overrides)
+    // Pre-fill settings
     const gh = getGitHubSettings();
     if (gh.pat) document.getElementById('github-pat').value = gh.pat;
     if (gh.repo) document.getElementById('github-repo').value = gh.repo;
     document.getElementById('sb-url').value = sbConfig.url;
     document.getElementById('sb-key').value = sbConfig.key;
 
-    // Auth: magic link
-    document.getElementById('auth-magic-link').addEventListener('click', async () => {
+    // ─── Auth: Email/Password ───
+    const authSubmitBtn = document.getElementById('auth-submit');
+    const authToggleBtn = document.getElementById('auth-toggle-btn');
+    const authToggleText = document.getElementById('auth-toggle-text');
+    const authSubtitle = document.getElementById('auth-subtitle');
+
+    function updateAuthUI() {
+        if (authMode === 'login') {
+            authSubmitBtn.textContent = 'Sign in';
+            authSubtitle.textContent = 'Sign in to your account';
+            authToggleText.textContent = "Don't have an account?";
+            authToggleBtn.textContent = 'Sign up';
+        } else {
+            authSubmitBtn.textContent = 'Create account';
+            authSubtitle.textContent = 'Create a new account';
+            authToggleText.textContent = 'Already have an account?';
+            authToggleBtn.textContent = 'Sign in';
+        }
+    }
+
+    authToggleBtn.addEventListener('click', () => {
+        authMode = authMode === 'login' ? 'signup' : 'login';
+        updateAuthUI();
+        document.getElementById('auth-message').textContent = '';
+        document.getElementById('auth-message').className = 'auth-message';
+    });
+
+    authSubmitBtn.addEventListener('click', async () => {
         const email = document.getElementById('auth-email').value.trim();
+        const password = document.getElementById('auth-password').value;
         const msg = document.getElementById('auth-message');
-        if (!email) {
-            msg.textContent = 'Please enter your email.';
+
+        if (!email || !password) {
+            msg.textContent = 'Please enter email and password.';
             msg.className = 'auth-message error';
             return;
         }
-        const { error } = await signInWithMagicLink(email);
-        if (error) {
-            msg.textContent = error.message;
-            msg.className = 'auth-message error';
+
+        msg.textContent = authMode === 'login' ? 'Signing in...' : 'Creating account...';
+        msg.className = 'auth-message';
+
+        if (authMode === 'login') {
+            const { data, error } = await signIn(email, password);
+            if (error) {
+                msg.textContent = error.message;
+                msg.className = 'auth-message error';
+            } else {
+                currentUser = data.user;
+                showApp();
+                loadUserProfile();
+                renderRecentResearch();
+            }
         } else {
-            msg.textContent = 'Magic link sent! Check your email.';
-            msg.className = 'auth-message success';
+            const { data, error } = await signUp(email, password);
+            if (error) {
+                msg.textContent = error.message;
+                msg.className = 'auth-message error';
+            } else {
+                // If email confirmation is required, user is null
+                if (data.user && data.session) {
+                    currentUser = data.user;
+                    showApp();
+                    loadUserProfile();
+                    renderRecentResearch();
+                } else {
+                    msg.textContent = 'Account created! Check your email to confirm, or sign in if already confirmed.';
+                    msg.className = 'auth-message success';
+                    authMode = 'login';
+                    updateAuthUI();
+                }
+            }
         }
+    });
+
+    // Allow Enter key to submit
+    document.getElementById('auth-password').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') authSubmitBtn.click();
     });
 
     // Auth: GitHub
@@ -807,7 +871,6 @@ document.addEventListener('DOMContentLoaded', () => {
             await saveUserProfile(repo);
         }
 
-        // Re-init Supabase if changed
         if (sbUrl && sbKey) {
             initSupabase();
             checkAuth();

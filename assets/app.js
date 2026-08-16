@@ -1,5 +1,5 @@
-/* ─── Star1 Frontend v4.1 ───
-   Supabase Auth + DB + GitHub Actions integration
+/* ─── Star1 Frontend v4.2 ───
+   Supabase Auth + DB + GitHub Actions
    Conventional email/password auth
 */
 
@@ -41,6 +41,7 @@ function initSupabase() {
     if (!url || !key) return false;
     try {
         supabase = window.supabase.createClient(url, key);
+        console.log('Supabase initialized');
         return true;
     } catch (e) {
         console.error('Supabase init failed:', e);
@@ -56,19 +57,20 @@ async function checkAuth() {
         return;
     }
 
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) {
-        console.error('Auth check error:', error);
-        showAuthGate();
-        return;
-    }
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
 
-    if (session?.user) {
-        currentUser = session.user;
-        showApp();
-        loadUserProfile();
-        renderRecentResearch();
-    } else {
+        if (session?.user) {
+            currentUser = session.user;
+            showApp();
+            loadUserProfile();
+            renderRecentResearch();
+        } else {
+            showAuthGate();
+        }
+    } catch (err) {
+        console.error('Auth check error:', err);
         showAuthGate();
     }
 }
@@ -91,27 +93,24 @@ function showApp() {
 
 async function signIn(email, password) {
     if (!supabase) return { error: new Error('Supabase not configured') };
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    return { data, error };
+    return await supabase.auth.signInWithPassword({ email, password });
 }
 
 async function signUp(email, password) {
     if (!supabase) return { error: new Error('Supabase not configured') };
-    const { data, error } = await supabase.auth.signUp({
+    return await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: window.location.href }
     });
-    return { data, error };
 }
 
 async function signInWithGitHub() {
     if (!supabase) return { error: new Error('Supabase not configured') };
-    const { error } = await supabase.auth.signInWithOAuth({
+    return await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: { redirectTo: window.location.href }
     });
-    return { error };
 }
 
 async function signOut() {
@@ -126,71 +125,86 @@ async function signOut() {
 async function loadUserProfile() {
     if (!supabase || !currentUser) return;
 
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('github_repo')
-        .eq('id', currentUser.id)
-        .single();
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('github_repo')
+            .eq('id', currentUser.id)
+            .single();
 
-    if (data?.github_repo) {
-        document.getElementById('github-repo').value = data.github_repo;
-        localStorage.setItem('star1_repo', data.github_repo);
+        if (data?.github_repo) {
+            document.getElementById('github-repo').value = data.github_repo;
+            localStorage.setItem('star1_repo', data.github_repo);
+        }
+    } catch (e) {
+        console.error('Profile load error:', e);
     }
 }
 
 async function saveUserProfile(githubRepo) {
     if (!supabase || !currentUser) return;
-
-    await supabase.from('profiles').upsert({
-        id: currentUser.id,
-        github_repo: githubRepo,
-        updated_at: new Date().toISOString()
-    });
+    try {
+        await supabase.from('profiles').upsert({
+            id: currentUser.id,
+            github_repo: githubRepo,
+            updated_at: new Date().toISOString()
+        });
+    } catch (e) {
+        console.error('Profile save error:', e);
+    }
 }
 
-// ─── Research Jobs (Supabase DB) ───
+// ─── Research Jobs ───
 
 async function createResearchJob(question, githubRunId) {
     if (!supabase || !currentUser) return null;
 
-    const { data, error } = await supabase
-        .from('research_jobs')
-        .insert({
-            user_id: currentUser.id,
-            question,
-            status: 'pending',
-            github_run_id: githubRunId?.toString()
-        })
-        .select()
-        .single();
+    try {
+        const { data, error } = await supabase
+            .from('research_jobs')
+            .insert({
+                user_id: currentUser.id,
+                question,
+                status: 'pending',
+                github_run_id: githubRunId?.toString()
+            })
+            .select()
+            .single();
 
-    if (error) {
-        console.error('DB insert error:', error);
+        if (error) throw error;
+        return data;
+    } catch (e) {
+        console.error('DB insert error:', e);
         return null;
     }
-    return data;
 }
 
 async function updateResearchJob(jobId, updates) {
     if (!supabase) return;
-    await supabase.from('research_jobs').update(updates).eq('id', jobId);
+    try {
+        await supabase.from('research_jobs').update(updates).eq('id', jobId);
+    } catch (e) {
+        console.error('DB update error:', e);
+    }
 }
 
 async function fetchResearchHistory() {
     if (!supabase || !currentUser) return [];
 
-    const { data, error } = await supabase
-        .from('research_jobs')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
+    try {
+        const { data, error } = await supabase
+            .from('research_jobs')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
 
-    if (error) {
-        console.error('DB fetch error:', error);
+        if (error) throw error;
+        return data || [];
+    } catch (e) {
+        console.error('DB fetch error:', e);
         return [];
     }
-    return data || [];
 }
 
 // ─── GitHub API ───
@@ -279,7 +293,8 @@ async function checkJobStatus(runId) {
 
 function showState(stateId) {
     document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
-    document.getElementById(stateId).classList.add('active');
+    const el = document.getElementById(stateId);
+    if (el) el.classList.add('active');
 }
 
 function setStepState(stepName, state) {
@@ -290,31 +305,15 @@ function setStepState(stepName, state) {
 }
 
 function updateProgress(runStatus) {
-    const steps = ['understand', 'research', 'crosscheck', 'synthesize', 'write'];
-
     if (runStatus === 'queued' || runStatus === 'waiting') {
         setStepState('understand', 'active');
     } else if (runStatus === 'in_progress') {
         const elapsed = pollCount * CONFIG.pollInterval / 1000;
-        if (elapsed < 20) {
-            setStepState('understand', 'done');
-            setStepState('research', 'active');
-        } else if (elapsed < 60) {
-            setStepState('understand', 'done');
-            setStepState('research', 'done');
-            setStepState('crosscheck', 'active');
-        } else if (elapsed < 100) {
-            setStepState('understand', 'done');
-            setStepState('research', 'done');
-            setStepState('crosscheck', 'done');
-            setStepState('synthesize', 'active');
-        } else {
-            setStepState('understand', 'done');
-            setStepState('research', 'done');
-            setStepState('crosscheck', 'done');
-            setStepState('synthesize', 'done');
-            setStepState('write', 'active');
-        }
+        setStepState('understand', 'done');
+        if (elapsed < 20) setStepState('research', 'active');
+        else if (elapsed < 60) { setStepState('research', 'done'); setStepState('crosscheck', 'active'); }
+        else if (elapsed < 100) { setStepState('crosscheck', 'done'); setStepState('synthesize', 'active'); }
+        else { setStepState('synthesize', 'done'); setStepState('write', 'active'); }
     }
 }
 
@@ -326,6 +325,8 @@ function resetProgress() {
 
 async function renderRecentResearch() {
     const container = document.getElementById('recent-list');
+    if (!container) return;
+
     const items = await fetchResearchHistory();
 
     if (items.length === 0) {
@@ -336,7 +337,7 @@ async function renderRecentResearch() {
     container.innerHTML = items.map(item => {
         const date = new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         return `
-            <button class="recent-item" data-job-id="${item.id}" data-run-id="${item.github_run_id || ''}">
+            <button type="button" class="recent-item" data-job-id="${item.id}" data-run-id="${item.github_run_id || ''}">
                 <span class="recent-item-status ${item.status}"></span>
                 <div class="recent-item-text">
                     <div class="recent-item-question">${escapeHtml(item.question)}</div>
@@ -356,11 +357,15 @@ async function renderRecentResearch() {
 
 async function loadPastResearch(jobId, runId) {
     if (supabase && jobId) {
-        const { data } = await supabase.from('research_jobs').select('*').eq('id', jobId).single();
-        if (data?.result_json) {
-            renderReport({ report: data.result_json });
-            showState('report');
-            return;
+        try {
+            const { data } = await supabase.from('research_jobs').select('*').eq('id', jobId).single();
+            if (data?.result_json) {
+                renderReport({ report: data.result_json });
+                showState('report');
+                return;
+            }
+        } catch (e) {
+            console.error('Load from DB failed:', e);
         }
     }
 
@@ -387,14 +392,15 @@ async function loadPastResearch(jobId, runId) {
 
 function renderReport(data) {
     const container = document.getElementById('report-content');
+    if (!container) return;
 
     if (!data || !data.report) {
         container.innerHTML = `
             <div class="error-banner">
                 <h3>Star1 couldn't complete the research.</h3>
                 <p>The result file was empty or malformed.</p>
-                <button class="retry-btn" onclick="location.reload()">Try again</button>
-                <button class="change-btn" onclick="showState('landing')">Change the question</button>
+                <button type="button" class="retry-btn" onclick="location.reload()">Try again</button>
+                <button type="button" class="change-btn" onclick="showState('landing')">Change the question</button>
             </div>
         `;
         return;
@@ -479,7 +485,7 @@ function renderReport(data) {
 
         html += `
             <div class="sources-section">
-                <button class="sources-toggle" onclick="this.nextElementSibling.classList.toggle('open')">
+                <button type="button" class="sources-toggle" onclick="this.nextElementSibling.classList.toggle('open')">
                     Sources
                     <span class="sources-count">${r.sources.length} · ${primaryCount} primary · ${secondaryCount} secondary</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -524,6 +530,7 @@ async function pollJob() {
 
     if (pollCount > CONFIG.maxPolls) {
         clearInterval(pollTimer);
+        pollTimer = null;
         showError('Research is taking longer than expected. You can check the GitHub Actions tab for status.');
         if (currentJob.dbId) {
             await updateResearchJob(currentJob.dbId, { status: 'failed' });
@@ -542,6 +549,7 @@ async function pollJob() {
             }
         } else if (status.status === 'success') {
             clearInterval(pollTimer);
+            pollTimer = null;
             setStepState('write', 'done');
 
             if (status.result) {
@@ -559,6 +567,7 @@ async function pollJob() {
             }
         } else if (status.status === 'failed') {
             clearInterval(pollTimer);
+            pollTimer = null;
             showError(status.error || "Star1 couldn't complete the research.");
             if (currentJob.dbId) {
                 await updateResearchJob(currentJob.dbId, { status: 'failed' });
@@ -572,12 +581,13 @@ async function pollJob() {
 
 function showError(message) {
     const container = document.getElementById('report-content');
+    if (!container) return;
     container.innerHTML = `
         <div class="error-banner">
             <h3>Star1 couldn't complete the research.</h3>
             <p>${escapeHtml(message)}</p>
-            <button class="retry-btn" onclick="location.reload()">Try again</button>
-            <button class="change-btn" onclick="showState('landing')">Change the question</button>
+            <button type="button" class="retry-btn" onclick="location.reload()">Try again</button>
+            <button type="button" class="change-btn" onclick="showState('landing')">Change the question</button>
         </div>
     `;
     showState('report');
@@ -599,15 +609,18 @@ async function startResearch(question) {
         return;
     }
 
-    document.getElementById('active-question').textContent = question;
-    document.getElementById('job-id-display').textContent = 'Triggering...';
+    const activeQ = document.getElementById('active-question');
+    const jobIdDisplay = document.getElementById('job-id-display');
+    if (activeQ) activeQ.textContent = question;
+    if (jobIdDisplay) jobIdDisplay.textContent = 'Triggering...';
+
     resetProgress();
     showState('researching');
 
     try {
         const job = await triggerResearch(question);
         currentJob = job;
-        document.getElementById('job-id-display').textContent = `Job #${job.id}`;
+        if (jobIdDisplay) jobIdDisplay.textContent = `Job #${job.id}`;
 
         if (supabase && currentUser) {
             const dbJob = await createResearchJob(question, job.runId);
@@ -622,16 +635,20 @@ async function startResearch(question) {
             pollJob();
         } else {
             setTimeout(async () => {
-                const { repo } = getGitHubSettings();
-                const [owner, repoName] = repo.split('/');
-                const runs = await githubRequest(`/repos/${owner}/${repoName}/actions/runs?event=workflow_dispatch&per_page=5`);
-                const run = runs.workflow_runs.find(r => r.name === 'Star1' && r.status !== 'completed');
-                if (run) {
-                    currentJob = { id: run.id.toString(), runId: run.id, dbId: currentJob?.dbId };
-                    document.getElementById('job-id-display').textContent = `Job #${run.id}`;
-                    pollCount = 0;
-                    pollTimer = setInterval(pollJob, CONFIG.pollInterval);
-                    pollJob();
+                try {
+                    const { repo } = getGitHubSettings();
+                    const [owner, repoName] = repo.split('/');
+                    const runs = await githubRequest(`/repos/${owner}/${repoName}/actions/runs?event=workflow_dispatch&per_page=5`);
+                    const run = runs.workflow_runs.find(r => r.name === 'Star1' && r.status !== 'completed');
+                    if (run) {
+                        currentJob = { id: run.id.toString(), runId: run.id, dbId: currentJob?.dbId };
+                        if (jobIdDisplay) jobIdDisplay.textContent = `Job #${run.id}`;
+                        pollCount = 0;
+                        pollTimer = setInterval(pollJob, CONFIG.pollInterval);
+                        pollJob();
+                    }
+                } catch (e) {
+                    console.error('Fallback run find failed:', e);
                 }
             }, 6000);
         }
@@ -644,7 +661,8 @@ async function startResearch(question) {
 // ─── Settings ───
 
 function openSettings(tab = 'github') {
-    document.getElementById('settings-modal').classList.add('open');
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.add('open');
     switchSettingsTab(tab);
 }
 
@@ -713,7 +731,9 @@ async function testSupabase() {
 // ─── Init ───
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Init Supabase with hardcoded defaults
+    console.log('Star1 initializing...');
+
+    // Init Supabase
     const sbConfig = getSupabaseConfig();
     if (sbConfig.url && sbConfig.key) {
         initSupabase();
@@ -724,58 +744,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Pre-fill settings
     const gh = getGitHubSettings();
-    if (gh.pat) document.getElementById('github-pat').value = gh.pat;
-    if (gh.repo) document.getElementById('github-repo').value = gh.repo;
-    document.getElementById('sb-url').value = sbConfig.url;
-    document.getElementById('sb-key').value = sbConfig.key;
+    const patInput = document.getElementById('github-pat');
+    const repoInput = document.getElementById('github-repo');
+    const sbUrlInput = document.getElementById('sb-url');
+    const sbKeyInput = document.getElementById('sb-key');
 
-    // ─── Auth: Email/Password ───
+    if (patInput && gh.pat) patInput.value = gh.pat;
+    if (repoInput && gh.repo) repoInput.value = gh.repo;
+    if (sbUrlInput) sbUrlInput.value = sbConfig.url;
+    if (sbKeyInput) sbKeyInput.value = sbConfig.key;
+
+    // ─── Auth UI ───
     const authSubmitBtn = document.getElementById('auth-submit');
     const authToggleBtn = document.getElementById('auth-toggle-btn');
     const authToggleText = document.getElementById('auth-toggle-text');
     const authSubtitle = document.getElementById('auth-subtitle');
+    const authEmail = document.getElementById('auth-email');
+    const authPassword = document.getElementById('auth-password');
+    const authMessage = document.getElementById('auth-message');
 
     function updateAuthUI() {
+        if (!authSubmitBtn || !authSubtitle) return;
         if (authMode === 'login') {
             authSubmitBtn.textContent = 'Sign in';
             authSubtitle.textContent = 'Sign in to your account';
-            authToggleText.textContent = "Don't have an account?";
-            authToggleBtn.textContent = 'Sign up';
+            if (authToggleText) authToggleText.textContent = "Don't have an account?";
+            if (authToggleBtn) authToggleBtn.textContent = 'Sign up';
         } else {
             authSubmitBtn.textContent = 'Create account';
             authSubtitle.textContent = 'Create a new account';
-            authToggleText.textContent = 'Already have an account?';
-            authToggleBtn.textContent = 'Sign in';
+            if (authToggleText) authToggleText.textContent = 'Already have an account?';
+            if (authToggleBtn) authToggleBtn.textContent = 'Sign in';
         }
     }
 
-    authToggleBtn.addEventListener('click', () => {
-        authMode = authMode === 'login' ? 'signup' : 'login';
-        updateAuthUI();
-        document.getElementById('auth-message').textContent = '';
-        document.getElementById('auth-message').className = 'auth-message';
-    });
+    if (authToggleBtn) {
+        authToggleBtn.addEventListener('click', () => {
+            authMode = authMode === 'login' ? 'signup' : 'login';
+            updateAuthUI();
+            if (authMessage) {
+                authMessage.textContent = '';
+                authMessage.className = 'auth-message';
+            }
+        });
+    }
 
-    authSubmitBtn.addEventListener('click', async () => {
-        const email = document.getElementById('auth-email').value.trim();
-        const password = document.getElementById('auth-password').value;
-        const msg = document.getElementById('auth-message');
+    async function handleAuthSubmit() {
+        if (!authEmail || !authPassword || !authMessage) return;
+
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
 
         if (!email || !password) {
-            msg.textContent = 'Please enter email and password.';
-            msg.className = 'auth-message error';
+            authMessage.textContent = 'Please enter email and password.';
+            authMessage.className = 'auth-message error';
             return;
         }
 
-        msg.textContent = authMode === 'login' ? 'Signing in...' : 'Creating account...';
-        msg.className = 'auth-message';
+        authMessage.textContent = authMode === 'login' ? 'Signing in...' : 'Creating account...';
+        authMessage.className = 'auth-message';
 
         if (authMode === 'login') {
             const { data, error } = await signIn(email, password);
             if (error) {
-                msg.textContent = error.message;
-                msg.className = 'auth-message error';
-            } else {
+                authMessage.textContent = error.message;
+                authMessage.className = 'auth-message error';
+            } else if (data?.user) {
                 currentUser = data.user;
                 showApp();
                 loadUserProfile();
@@ -784,73 +818,94 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const { data, error } = await signUp(email, password);
             if (error) {
-                msg.textContent = error.message;
-                msg.className = 'auth-message error';
+                authMessage.textContent = error.message;
+                authMessage.className = 'auth-message error';
+            } else if (data?.session) {
+                // Auto-signed in
+                currentUser = data.user;
+                showApp();
+                loadUserProfile();
+                renderRecentResearch();
             } else {
-                // If email confirmation is required, user is null
-                if (data.user && data.session) {
-                    currentUser = data.user;
-                    showApp();
-                    loadUserProfile();
-                    renderRecentResearch();
-                } else {
-                    msg.textContent = 'Account created! Check your email to confirm, or sign in if already confirmed.';
-                    msg.className = 'auth-message success';
-                    authMode = 'login';
-                    updateAuthUI();
-                }
+                authMessage.textContent = 'Account created! Check your email to confirm, then sign in.';
+                authMessage.className = 'auth-message success';
+                authMode = 'login';
+                updateAuthUI();
             }
         }
-    });
+    }
 
-    // Allow Enter key to submit
-    document.getElementById('auth-password').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') authSubmitBtn.click();
-    });
+    if (authSubmitBtn) {
+        authSubmitBtn.addEventListener('click', handleAuthSubmit);
+    }
+
+    if (authPassword) {
+        authPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAuthSubmit();
+        });
+    }
 
     // Auth: GitHub
-    document.getElementById('auth-github').addEventListener('click', async () => {
-        const { error } = await signInWithGitHub();
-        if (error) {
-            const msg = document.getElementById('auth-message');
-            msg.textContent = error.message;
-            msg.className = 'auth-message error';
-        }
-    });
+    const authGithubBtn = document.getElementById('auth-github');
+    if (authGithubBtn) {
+        authGithubBtn.addEventListener('click', async () => {
+            const { error } = await signInWithGitHub();
+            if (error && authMessage) {
+                authMessage.textContent = error.message;
+                authMessage.className = 'auth-message error';
+            }
+        });
+    }
 
     // Research submit
     const input = document.getElementById('research-question');
     const submitBtn = document.getElementById('submit-research');
 
     function handleSubmit() {
+        if (!input) return;
         const question = input.value.trim();
         if (!question) return;
         startResearch(question);
     }
 
-    submitBtn.addEventListener('click', handleSubmit);
-    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSubmit(); });
+    if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
+    if (input) input.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSubmit(); });
 
     // Example chips
     document.querySelectorAll('.example-chip').forEach(chip => {
-        chip.addEventListener('click', () => { input.value = chip.dataset.question; handleSubmit(); });
+        chip.addEventListener('click', () => {
+            if (input) input.value = chip.dataset.question;
+            handleSubmit();
+        });
     });
 
     // Cancel
-    document.getElementById('cancel-research').addEventListener('click', () => {
-        if (pollTimer) clearInterval(pollTimer);
-        currentJob = null;
-        showState('landing');
-    });
+    const cancelBtn = document.getElementById('cancel-research');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+            currentJob = null;
+            showState('landing');
+        });
+    }
 
     // New research
-    document.getElementById('new-research').addEventListener('click', () => {
-        input.value = '';
-        showState('landing');
-    });
+    const newResearchBtn = document.getElementById('new-research');
+    if (newResearchBtn) {
+        newResearchBtn.addEventListener('click', () => {
+            if (input) input.value = '';
+            showState('landing');
+        });
+    }
 
     // Open settings
-    document.getElementById('open-settings').addEventListener('click', () => openSettings('github'));
+    const openSettingsBtn = document.getElementById('open-settings');
+    if (openSettingsBtn) {
+        openSettingsBtn.addEventListener('click', () => openSettings('github'));
+    }
 
     // Settings tabs
     document.querySelectorAll('.settings-tab').forEach(tab => {
@@ -858,34 +913,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Save all settings
-    document.getElementById('save-settings').addEventListener('click', async () => {
-        const pat = document.getElementById('github-pat').value.trim();
-        const repo = document.getElementById('github-repo').value.trim();
-        const sbUrl = document.getElementById('sb-url').value.trim();
-        const sbKey = document.getElementById('sb-key').value.trim();
+    const saveSettingsBtn = document.getElementById('save-settings');
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', async () => {
+            const pat = patInput ? patInput.value.trim() : '';
+            const repo = repoInput ? repoInput.value.trim() : '';
+            const sbUrl = sbUrlInput ? sbUrlInput.value.trim() : '';
+            const sbKey = sbKeyInput ? sbKeyInput.value.trim() : '';
 
-        saveGitHubSettings(pat, repo);
-        if (sbUrl && sbKey) saveSupabaseConfig(sbUrl, sbKey);
+            saveGitHubSettings(pat, repo);
+            if (sbUrl && sbKey) saveSupabaseConfig(sbUrl, sbKey);
 
-        if (repo && currentUser) {
-            await saveUserProfile(repo);
-        }
+            if (repo && currentUser) {
+                await saveUserProfile(repo);
+            }
 
-        if (sbUrl && sbKey) {
-            initSupabase();
-            checkAuth();
-        }
+            if (sbUrl && sbKey) {
+                initSupabase();
+                checkAuth();
+            }
 
-        document.getElementById('settings-modal').classList.remove('open');
-    });
+            const modal = document.getElementById('settings-modal');
+            if (modal) modal.classList.remove('open');
+        });
+    }
 
     // Test connection
-    document.getElementById('test-connection').addEventListener('click', testConnection);
+    const testConnBtn = document.getElementById('test-connection');
+    if (testConnBtn) testConnBtn.addEventListener('click', testConnection);
 
     // Save Supabase
-    document.getElementById('save-supabase').addEventListener('click', async () => {
-        const url = document.getElementById('sb-url').value.trim();
-        const key = document.getElementById('sb-key').value.trim();
+    const saveSbBtn = document.getElementById('save-supabase');
+    if (saveSbBtn) saveSbBtn.addEventListener('click', async () => {
+        const url = sbUrlInput ? sbUrlInput.value.trim() : '';
+        const key = sbKeyInput ? sbKeyInput.value.trim() : '';
         if (url && key) {
             saveSupabaseConfig(url, key);
             initSupabase();
@@ -895,10 +956,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Sign out
-    document.getElementById('sign-out').addEventListener('click', signOut);
+    const signOutBtn = document.getElementById('sign-out');
+    if (signOutBtn) signOutBtn.addEventListener('click', signOut);
 
     // Close modal on backdrop
-    document.querySelector('.modal-backdrop').addEventListener('click', () => {
-        document.getElementById('settings-modal').classList.remove('open');
-    });
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+        backdrop.addEventListener('click', () => {
+            const modal = document.getElementById('settings-modal');
+            if (modal) modal.classList.remove('open');
+        });
+    }
+
+    console.log('Star1 ready.');
 });

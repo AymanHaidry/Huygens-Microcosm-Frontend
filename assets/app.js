@@ -1,4 +1,4 @@
-/* ─── Star1 Frontend v4 ───
+/* ─── Nanofossil Frontend v4 ───
    Supabase Auth + DB + GitHub Actions integration
 */
 
@@ -7,6 +7,12 @@ const CONFIG = {
     pollInterval: 10000,
     maxPolls: 90,
     githubApi: 'https://api.github.com'
+};
+
+// ─── Hardcoded Supabase Credentials ───
+const SUPABASE_DEFAULTS = {
+    url: 'https://cknkncrnfdxqdcvwsdtz.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrbmtuY3JuZmR4cWRjdndzZHR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODUyMjcsImV4cCI6MjEwMjQ2MTIyN30.6kwPURKaYq5GfRuCoQjY6YjIDqwaGEJxvBqHL8jCVf4'
 };
 
 let supabase = null;
@@ -19,8 +25,8 @@ let pollCount = 0;
 
 function getSupabaseConfig() {
     return {
-        url: localStorage.getItem('star1_sb_url') || '',
-        key: localStorage.getItem('star1_sb_key') || ''
+        url: localStorage.getItem('star1_sb_url') || SUPABASE_DEFAULTS.url,
+        key: localStorage.getItem('star1_sb_key') || SUPABASE_DEFAULTS.key
     };
 }
 
@@ -380,7 +386,7 @@ function renderReport(data) {
     if (!data || !data.report) {
         container.innerHTML = `
             <div class="error-banner">
-                <h3>Star1 couldn't complete the research.</h3>
+                <h3>Nanofossil couldn't complete the research.</h3>
                 <p>The result file was empty or malformed.</p>
                 <button class="retry-btn" onclick="location.reload()">Try again</button>
                 <button class="change-btn" onclick="showState('landing')">Change the question</button>
@@ -548,7 +554,7 @@ async function pollJob() {
             }
         } else if (status.status === 'failed') {
             clearInterval(pollTimer);
-            showError(status.error || 'Star1 couldn't complete the research.');
+            showError(status.error || "Nanofossil couldn't complete the research.");
             if (currentJob.dbId) {
                 await updateResearchJob(currentJob.dbId, { status: 'failed' });
             }
@@ -563,7 +569,7 @@ function showError(message) {
     const container = document.getElementById('report-content');
     container.innerHTML = `
         <div class="error-banner">
-            <h3>Star1 couldn't complete the research.</h3>
+            <h3>Nanofossil couldn't complete the research.</h3>
             <p>${escapeHtml(message)}</p>
             <button class="retry-btn" onclick="location.reload()">Try again</button>
             <button class="change-btn" onclick="showState('landing')">Change the question</button>
@@ -703,7 +709,7 @@ async function testSupabase() {
 // ─── Init ───
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Init Supabase if configured
+    // Init Supabase with hardcoded defaults
     const sbConfig = getSupabaseConfig();
     if (sbConfig.url && sbConfig.key) {
         initSupabase();
@@ -712,12 +718,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showAuthGate();
     }
 
-    // Pre-fill settings
+    // Pre-fill settings (hardcoded values + any saved overrides)
     const gh = getGitHubSettings();
     if (gh.pat) document.getElementById('github-pat').value = gh.pat;
     if (gh.repo) document.getElementById('github-repo').value = gh.repo;
-    if (sbConfig.url) document.getElementById('sb-url').value = sbConfig.url;
-    if (sbConfig.key) document.getElementById('sb-key').value = sbConfig.key;
+    document.getElementById('sb-url').value = sbConfig.url;
+    document.getElementById('sb-key').value = sbConfig.key;
 
     // Auth: magic link
     document.getElementById('auth-magic-link').addEventListener('click', async () => {

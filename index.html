@@ -1,903 +1,989 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Huygens Nanofossil — Autonomous Research Instrument</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --forest: #1D4533;
-            --forest-light: #2a5c45;
-            --forest-dark: #0f2a1e;
-            --sage: #8fb396;
-            --sage-light: #c4d9c8;
-            --cream: #faf8f5;
-            --cream-warm: #f5f0e8;
-            --parchment: #f0ebe3;
-            --ink: #1a1a1a;
-            --ink-soft: #4a4a4a;
-            --ink-muted: #8a8a8a;
-            --border: #e0d8ce;
-            --border-light: #ebe5dc;
-            --accent-warm: #c4956a;
-            --error: #c44;
-            --success: #2a7;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: var(--cream);
-            color: var(--ink);
-            line-height: 1.7;
-            overflow-x: hidden;
-        }
-        .paper-grain {
-            position: fixed; inset: 0;
-            pointer-events: none; z-index: 9999; opacity: 0.025;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-            background-repeat: repeat; background-size: 256px 256px;
-        }
-        h1, h2, h3, h4, h5 {
-            font-family: 'Crimson Pro', Georgia, serif;
-            font-weight: 600; line-height: 1.2; color: var(--forest);
-        }
-        h1 { font-size: clamp(2.8rem, 6vw, 5rem); letter-spacing: -0.02em; }
-        h2 { font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -0.01em; margin-bottom: 1.5rem; }
-        h3 { font-size: clamp(1.4rem, 2.5vw, 1.9rem); margin-bottom: 1rem; }
-        h4 { font-size: 1.25rem; margin-bottom: 0.75rem; }
-        p { margin-bottom: 1.2rem; color: var(--ink-soft); }
-        a { color: var(--forest); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
-        a:hover { border-bottom-color: var(--forest); }
-        code {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.85em;
-            background: var(--parchment); padding: 0.15em 0.4em; border-radius: 4px; color: var(--forest-dark);
-        }
-        pre {
-            background: var(--forest-dark); color: var(--sage-light); padding: 1.5rem;
-            border-radius: 12px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem; line-height: 1.6; margin: 1.5rem 0;
-        }
-        .site-nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-            background: rgba(250, 248, 245, 0.85); backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-light); padding: 0 2rem;
-        }
-        .nav-inner {
-            max-width: 1400px; margin: 0 auto;
-            display: flex; align-items: center; justify-content: space-between; height: 64px;
-        }
-        .nav-brand {
-            display: flex; align-items: center; gap: 0.6rem;
-            font-family: 'Crimson Pro', serif; font-size: 1.3rem; font-weight: 600; color: var(--forest);
-        }
-        .nav-brand svg { width: 28px; height: 28px; }
-        .nav-links {
-            display: flex; gap: 2.5rem; list-style: none; font-size: 0.9rem; font-weight: 500;
-        }
-        .nav-links a { color: var(--ink-soft); border-bottom: none; position: relative; }
-        .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1.5px; background: var(--forest); transition: width 0.3s ease; }
-        .nav-links a:hover::after { width: 100%; }
-        .nav-links a:hover { color: var(--forest); }
-        .nav-cta {
-            background: var(--forest); color: var(--cream) !important;
-            padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
-            border: none; cursor: pointer; transition: all 0.2s;
-        }
-        .nav-cta:hover { background: var(--forest-light); transform: translateY(-1px); }
-        section { padding: 6rem 2rem; max-width: 1400px; margin: 0 auto; }
-        .section-header { text-align: center; max-width: 700px; margin: 0 auto 4rem; }
-        .section-header h2 { margin-bottom: 1rem; }
-        .section-header p { font-size: 1.15rem; color: var(--ink-muted); }
-        .section-label {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; text-transform: uppercase;
-            letter-spacing: 0.15em; color: var(--sage); margin-bottom: 1rem; display: block;
-        }
-        .hero-section {
-            min-height: 100vh; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
-            padding: 8rem 2rem 4rem; position: relative; max-width: 900px; margin: 0 auto;
-        }
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            background: var(--parchment); border: 1px solid var(--border);
-            padding: 0.4rem 1rem; border-radius: 100px; font-size: 0.8rem;
-            font-weight: 500; color: var(--forest); margin-bottom: 2rem;
-        }
-        .hero-badge .dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .hero-title {
-            font-family: 'Crimson Pro', serif; font-size: clamp(3rem, 7vw, 6rem);
-            font-weight: 700; color: var(--forest); line-height: 1.05;
-            margin-bottom: 1.5rem; letter-spacing: -0.03em;
-        }
-        .hero-title .accent { font-style: italic; font-weight: 400; color: var(--sage); }
-        .hero-subtitle {
-            font-size: clamp(1.1rem, 2vw, 1.4rem); color: var(--ink-muted);
-            max-width: 600px; margin: 0 auto 3rem; line-height: 1.6;
-        }
-        .hero-cta-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 4rem; }
-        .btn-primary {
-            background: var(--forest); color: var(--cream); padding: 0.9rem 2rem;
-            border-radius: 10px; font-size: 0.95rem; font-weight: 500; border: none;
-            cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; gap: 0.5rem;
-        }
-        .btn-primary:hover { background: var(--forest-light); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(29, 69, 51, 0.2); }
-        .btn-secondary {
-            background: transparent; color: var(--forest); padding: 0.9rem 2rem;
-            border-radius: 10px; font-size: 0.95rem; font-weight: 500;
-            border: 1.5px solid var(--border); cursor: pointer; transition: all 0.25s;
-        }
-        .btn-secondary:hover { border-color: var(--forest); background: var(--parchment); }
-        .browser-frame {
-            background: #fff; border-radius: 16px;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
-            overflow: hidden; max-width: 1100px; margin: 0 auto;
-            transform: perspective(1200px) rotateX(2deg); transition: transform 0.5s ease;
-        }
-        .browser-frame:hover { transform: perspective(1200px) rotateX(0deg) translateY(-5px); }
-        .browser-header {
-            background: linear-gradient(180deg, #f5f5f5, #e8e8e8); padding: 0.7rem 1rem;
-            display: flex; align-items: center; gap: 0.6rem; border-bottom: 1px solid #ddd;
-        }
-        .browser-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .bd-red { background: #ff5f57; }
-        .bd-yellow { background: #febc2e; }
-        .bd-green { background: #28c840; }
-        .browser-url { flex: 1; background: #fff; border-radius: 6px; padding: 0.3rem 1rem; font-size: 0.8rem; color: #888; text-align: center; border: 1px solid #ddd; }
-        .browser-content { padding: 0; min-height: 400px; background: var(--cream); }
-        .ss-auth { display: flex; align-items: center; justify-content: center; min-height: 500px; background: linear-gradient(135deg, var(--cream) 0%, var(--cream-warm) 100%); padding: 3rem; }
-        .ss-auth-box { background: #fff; border-radius: 20px; padding: 3rem; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.08); text-align: center; }
-        .ss-auth-box .ss-logo { width: 48px; height: 48px; margin: 0 auto 1rem; }
-        .ss-auth-box h3 { font-family: 'Crimson Pro', serif; font-size: 1.8rem; color: var(--forest); margin-bottom: 0.3rem; }
-        .ss-auth-box .ss-sub { color: var(--ink-muted); font-size: 0.9rem; margin-bottom: 2rem; }
-        .ss-input { width: 100%; padding: 0.8rem 1rem; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.9rem; margin-bottom: 1rem; color: var(--ink-muted); }
-        .ss-btn-full { width: 100%; padding: 0.8rem; background: var(--forest); color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; }
-        .ss-divider { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0; color: var(--ink-muted); font-size: 0.8rem; }
-        .ss-divider::before, .ss-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-        .ss-github-btn { width: 100%; padding: 0.8rem; background: #fff; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--ink); }
-        .ss-landing { min-height: 520px; background: var(--cream); padding: 2rem 3rem; }
-        .ss-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4rem; }
-        .ss-header-brand { font-family: 'Crimson Pro', serif; font-size: 0.9rem; color: var(--forest); font-weight: 500; }
-        .ss-header-actions { display: flex; gap: 0.8rem; }
-        .ss-icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; color: var(--forest); }
-        .ss-hero-center { text-align: center; max-width: 600px; margin: 0 auto 3rem; }
-        .ss-hero-center h1 { font-size: 3rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-        .ss-hero-center .tagline { color: var(--ink-muted); font-style: italic; font-family: 'Crimson Pro', serif; font-size: 1.1rem; }
-        .ss-input-wrap { max-width: 560px; margin: 0 auto 1.5rem; display: flex; background: #fff; border: 1.5px solid var(--border); border-radius: 14px; padding: 0.4rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-        .ss-input-wrap input { flex: 1; border: none; padding: 0.8rem 1rem; font-size: 1rem; outline: none; background: transparent; }
-        .ss-input-wrap input::placeholder { color: #bbb; }
-        .ss-submit { width: 44px; height: 44px; border-radius: 10px; background: var(--forest); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .ss-chips { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
-        .ss-chip { padding: 0.4rem 0.9rem; background: #fff; border: 1px solid var(--border-light); border-radius: 100px; font-size: 0.8rem; color: var(--ink-soft); }
-        .ss-researching { min-height: 520px; background: var(--cream); padding: 2rem 3rem; }
-        .ss-research-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
-        .ss-job-id { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--ink-muted); background: var(--parchment); padding: 0.3rem 0.8rem; border-radius: 6px; }
-        .ss-question-display { text-align: center; margin-bottom: 3rem; }
-        .ss-question-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sage); margin-bottom: 0.5rem; display: block; }
-        .ss-question-display h2 { font-size: 1.6rem; color: var(--forest); }
-        .ss-progress-track { max-width: 520px; margin: 0 auto; }
-        .ss-step { display: flex; align-items: flex-start; gap: 1rem; padding: 1.2rem 0; border-bottom: 1px solid var(--border-light); }
-        .ss-step:last-child { border-bottom: none; }
-        .ss-step-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .ss-step.active .ss-step-icon { background: var(--forest); color: #fff; }
-        .ss-step.done .ss-step-icon { background: var(--sage-light); color: var(--forest); }
-        .ss-step.pending .ss-step-icon { background: var(--parchment); color: var(--ink-muted); }
-        .ss-step-content { flex: 1; }
-        .ss-step-name { display: block; font-weight: 500; font-size: 0.95rem; margin-bottom: 0.2rem; }
-        .ss-step-desc { font-size: 0.8rem; color: var(--ink-muted); }
-        .ss-step-status { font-size: 1.1rem; }
-        .ss-step.done .ss-step-status { color: var(--success); }
-        .ss-step.active .ss-step-status { color: var(--forest); }
-        .ss-report { min-height: 520px; background: #fff; padding: 2rem 3rem; }
-        .ss-report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light); }
-        .ss-report-article { max-width: 680px; margin: 0 auto; }
-        .ss-report-article h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-        .ss-report-meta { display: flex; gap: 1.5rem; margin-bottom: 2rem; font-size: 0.8rem; color: var(--ink-muted); }
-        .ss-report-article p { font-size: 1rem; line-height: 1.8; margin-bottom: 1.2rem; }
-        .ss-report-article h3 { font-size: 1.3rem; margin-top: 2rem; margin-bottom: 0.8rem; }
-        .ss-source-list { background: var(--cream); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
-        .ss-source-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border-light); font-size: 0.85rem; }
-        .ss-source-item:last-child { border-bottom: none; }
-        .ss-source-num { width: 24px; height: 24px; border-radius: 50%; background: var(--forest); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; flex-shrink: 0; }
-        .ss-settings-overlay { min-height: 520px; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; padding: 2rem; }
-        .ss-modal { background: #fff; border-radius: 16px; width: 100%; max-width: 560px; box-shadow: 0 30px 80px rgba(0,0,0,0.2); overflow: hidden; }
-        .ss-modal-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-light); }
-        .ss-modal-header h3 { font-size: 1.3rem; margin: 0; }
-        .ss-tabs { display: flex; border-bottom: 1px solid var(--border-light); padding: 0 2rem; }
-        .ss-tab { padding: 0.8rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: var(--ink-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
-        .ss-tab.active { color: var(--forest); border-bottom-color: var(--forest); }
-        .ss-modal-body { padding: 1.5rem 2rem; }
-        .ss-form-group { margin-bottom: 1.2rem; }
-        .ss-form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); margin-bottom: 0.4rem; }
-        .ss-form-group input { width: 100%; padding: 0.7rem 1rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
-        .ss-hint { font-size: 0.75rem; color: var(--ink-muted); margin-top: 0.3rem; }
-        .ss-modal-footer { padding: 1rem 2rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.8rem; }
-        .ss-btn-secondary { padding: 0.6rem 1.2rem; border: 1.5px solid var(--border); background: #fff; border-radius: 8px; font-size: 0.85rem; color: var(--ink-soft); }
-        .ss-btn-primary { padding: 0.6rem 1.5rem; background: var(--forest); color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 500; }
-        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
-        .feature-card { background: #fff; border-radius: 16px; padding: 2.5rem; border: 1px solid var(--border-light); transition: all 0.3s ease; }
-        .feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.08); border-color: var(--sage-light); }
-        .feature-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--parchment); display: flex; align-items: center; justify-content: center; margin-bottom: 1.2rem; color: var(--forest); }
-        .feature-card h4 { font-family: 'Crimson Pro', serif; font-size: 1.3rem; color: var(--forest); margin-bottom: 0.6rem; }
-        .feature-card p { font-size: 0.95rem; color: var(--ink-muted); margin: 0; }
-        .winery-hero { background: linear-gradient(160deg, var(--forest-dark) 0%, var(--forest) 100%); color: var(--cream); padding: 6rem 2rem; position: relative; overflow: hidden; }
-        .winery-hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(143,179,150,0.15) 0%, transparent 70%); border-radius: 50%; }
-        .winery-hero-inner { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
-        .winery-hero h2 { color: var(--cream); font-size: clamp(2.2rem, 5vw, 3.5rem); margin-bottom: 1rem; }
-        .winery-hero .lead { font-size: 1.25rem; color: var(--sage-light); max-width: 700px; line-height: 1.7; }
-        .arch-diagram { background: var(--forest-dark); border-radius: 20px; padding: 3rem; margin: 3rem 0; border: 1px solid rgba(143,179,150,0.2); }
-        .arch-flow { display: flex; flex-direction: column; gap: 0; max-width: 700px; margin: 0 auto; }
-        .arch-node { background: rgba(255,255,255,0.06); border: 1px solid rgba(143,179,150,0.25); border-radius: 14px; padding: 1.5rem 2rem; display: flex; align-items: center; gap: 1.2rem; position: relative; }
-        .arch-node.primary { background: rgba(143,179,150,0.12); border-color: var(--sage); }
-        .arch-arrow { display: flex; justify-content: center; padding: 0.5rem 0; color: var(--sage); font-size: 1.2rem; }
-        .arch-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(143,179,150,0.15); display: flex; align-items: center; justify-content: center; color: var(--sage-light); flex-shrink: 0; }
-        .arch-node.primary .arch-icon { background: var(--sage); color: var(--forest-dark); }
-        .arch-text h4 { color: var(--cream); font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
-        .arch-text p { color: var(--sage); font-size: 0.85rem; margin: 0; }
-        .pipeline-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
-        .pipeline-step { background: rgba(255,255,255,0.04); border: 1px solid rgba(143,179,150,0.15); border-radius: 16px; padding: 1.8rem; position: relative; transition: all 0.3s; }
-        .pipeline-step:hover { background: rgba(255,255,255,0.08); border-color: rgba(143,179,150,0.3); }
-        .pipeline-num { position: absolute; top: -12px; left: 1.5rem; background: var(--sage); color: var(--forest-dark); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
-        .pipeline-step h4 { color: var(--cream); font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; margin: 0.5rem 0 0.5rem; }
-        .pipeline-step p { color: var(--sage); font-size: 0.85rem; margin: 0; line-height: 1.6; }
-        .compare-table-wrap { overflow-x: auto; margin: 2rem 0; border-radius: 16px; border: 1px solid var(--border-light); }
-        .compare-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: #fff; }
-        .compare-table th { background: var(--parchment); padding: 1rem 1.5rem; text-align: left; font-weight: 600; color: var(--forest); border-bottom: 2px solid var(--border); font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        .compare-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-light); color: var(--ink-soft); }
-        .compare-table tr:hover td { background: var(--cream-warm); }
-        .compare-table .highlight { background: rgba(29, 69, 51, 0.04); font-weight: 500; color: var(--forest); }
-        .screenshots-section { background: var(--cream-warm); padding: 6rem 2rem; }
-        .screenshots-section .section-header h2 { color: var(--forest); }
-        .screenshot-item { margin-bottom: 5rem; }
-        .screenshot-item:last-child { margin-bottom: 0; }
-        .screenshot-caption { text-align: center; margin-top: 1.5rem; }
-        .screenshot-caption h4 { font-family: 'Crimson Pro', serif; font-size: 1.4rem; color: var(--forest); margin-bottom: 0.3rem; }
-        .screenshot-caption p { color: var(--ink-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto; }
-        .winery-content { max-width: 1400px; margin: 0 auto; padding: 5rem 2rem; }
-        .winery-content h2 { color: var(--forest); margin-bottom: 1.5rem; }
-        .winery-content h3 { color: var(--forest); margin-top: 3rem; margin-bottom: 1rem; font-size: 1.5rem; }
-        .winery-content p { max-width: 700px; font-size: 1.05rem; line-height: 1.8; }
-        .winery-content ul, .winery-content ol { max-width: 700px; margin: 1rem 0 1.5rem 1.5rem; color: var(--ink-soft); }
-        .winery-content li { margin-bottom: 0.6rem; line-height: 1.7; }
-        .winery-content strong { color: var(--forest); }
-        .quote-block { background: var(--parchment); border-left: 4px solid var(--forest); padding: 2rem 2.5rem; border-radius: 0 12px 12px 0; margin: 2.5rem 0; max-width: 700px; }
-        .quote-block p { font-family: 'Crimson Pro', serif; font-size: 1.3rem; font-style: italic; color: var(--forest); margin: 0; line-height: 1.6; }
-        .quote-block .attribution { margin-top: 1rem; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-style: normal; color: var(--ink-muted); }
-        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; margin: 3rem 0; padding: 2rem; background: #fff; border-radius: 16px; border: 1px solid var(--border-light); }
-        .stat-item { text-align: center; }
-        .stat-number { font-family: 'Crimson Pro', serif; font-size: 2.5rem; font-weight: 700; color: var(--forest); line-height: 1; }
-        .stat-label { font-size: 0.85rem; color: var(--ink-muted); margin-top: 0.5rem; }
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
-        .faq-item { border-bottom: 1px solid var(--border-light); padding: 1.5rem 0; }
-        .faq-question { font-weight: 600; color: var(--forest); font-size: 1.05rem; margin-bottom: 0.8rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .faq-answer { color: var(--ink-soft); line-height: 1.7; max-width: 700px; }
-        .site-footer { background: var(--forest-dark); color: var(--sage-light); padding: 4rem 2rem 2rem; text-align: center; }
-        .footer-brand { font-family: 'Crimson Pro', serif; font-size: 1.5rem; color: var(--cream); margin-bottom: 1rem; }
-        .footer-tagline { color: var(--sage); font-style: italic; margin-bottom: 2rem; }
-        .footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; }
-        .footer-links a { color: var(--sage-light); font-size: 0.9rem; border-bottom: none; }
-        .footer-links a:hover { color: var(--cream); }
-        .footer-copy { font-size: 0.8rem; color: var(--sage); opacity: 0.6; padding-top: 2rem; border-top: 1px solid rgba(143,179,150,0.15); }
-        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
-        .tag-pill { display: inline-block; padding: 0.25rem 0.7rem; background: var(--parchment); border: 1px solid var(--border); border-radius: 100px; font-size: 0.75rem; font-weight: 500; color: var(--forest); margin-right: 0.4rem; margin-bottom: 0.4rem; }
-        .winery-hero pre { background: rgba(0,0,0,0.3); border: 1px solid rgba(143,179,150,0.2); }
-        @media (max-width: 900px) {
-            .two-col { grid-template-columns: 1fr; gap: 2rem; }
-            .nav-links { display: none; }
-            section { padding: 4rem 1.5rem; }
-        }
-    </style>
-<base target="_blank">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#05060a">
+  <title>Nanofossil — Research the rabbit hole.</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#05060a; --bg2:#090b12; --panel:rgba(13,16,27,.72);
+      --ink:#f4f7ff; --muted:#a7afc1; --faint:#687083; --line:rgba(255,255,255,.09);
+      --cyan:#65e9ff; --blue:#7b7cff; --violet:#b46cff; --magenta:#ff5ac8;
+      --lime:#c7ff75; --hot:#ffb76b;
+      --glow:0 0 80px rgba(101,233,255,.11),0 0 180px rgba(180,108,255,.07);
+      --max:1180px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:
+      radial-gradient(circle at 15% 15%,rgba(123,124,255,.11),transparent 26%),
+      radial-gradient(circle at 85% 9%,rgba(101,233,255,.08),transparent 24%),
+      radial-gradient(circle at 50% 70%,rgba(180,108,255,.06),transparent 30%),var(--bg);
+      color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.12;
+      background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+      background-size:64px 64px;mask-image:linear-gradient(to bottom,black 0%,transparent 95%)}
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+    .stars{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+    .star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:.35;animation:twinkle 4s ease-in-out infinite}
+    @keyframes twinkle{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.9;transform:scale(1.4)}}
+    .orb{position:absolute;border-radius:50%;filter:blur(1px);mix-blend-mode:screen}
+    .orb.a{width:420px;height:420px;left:-180px;top:430px;background:radial-gradient(circle,rgba(101,233,255,.15),transparent 68%)}
+    .orb.b{width:560px;height:560px;right:-250px;top:800px;background:radial-gradient(circle,rgba(255,90,200,.12),transparent 68%)}
+    .wrap{position:relative;z-index:1}
+    nav{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:30;width:calc(100% - 48px);max-width:calc(var(--max) - 48px);border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(5,6,10,.45);backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);box-shadow:0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px rgba(255,255,255,.04);transition:all .3s ease}
+    nav::before{content:'';position:absolute;inset:0;border-radius:999px;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.06) 0%,transparent 50%,rgba(180,108,255,.03) 100%);mix-blend-mode:overlay}
+    nav::after{content:'';position:absolute;inset:-1px;border-radius:999px;pointer-events:none;background:conic-gradient(from 0deg at 20% 50%,transparent 0deg,rgba(101,233,255,.12) 90deg,transparent 180deg,rgba(180,108,255,.08) 270deg,transparent 360deg);filter:blur(6px);opacity:.5;z-index:-1}
+    nav:hover{border-color:rgba(180,108,255,.15);box-shadow:0 12px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.10),0 0 20px rgba(180,108,255,.06)}
+    .nav{max-width:100%;height:60px;margin:auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+    .brand img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(101,233,255,.3))}
+    .brand span{font-family:"Space Grotesk";font-size:15px}
+    .navlinks{display:flex;gap:28px;color:var(--muted);font-size:13px}
+    .navlinks a:hover{color:#fff}
+    .navcta{display:flex;gap:10px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border-radius:10px;padding:11px 16px;border:1px solid var(--line);cursor:pointer;transition:.2s}
+    .btn.primary{background:#f5f7ff;color:#05060a;border-color:#fff;box-shadow:0 0 24px rgba(255,255,255,.1)}
+    .btn.primary:hover{transform:translateY(-2px);box-shadow:0 0 34px rgba(101,233,255,.16)}
+    .btn.ghost{background:rgba(255,255,255,.025);color:#dfe4ef}
+    .btn.ghost:hover{border-color:rgba(101,233,255,.3);background:rgba(101,233,255,.05)}
+    .hero{position:relative;max-width:var(--max);margin:auto;min-height:calc(100vh - 72px);padding:140px 24px 70px;display:grid;grid-template-columns:1.08fr .92fr;align-items:center;gap:60px}
+    .hero > div:first-child{position:relative;z-index:2}
+    .eyebrow{display:inline-flex;gap:8px;align-items:center;padding:7px 11px;border:1px solid rgba(101,233,255,.2);background:rgba(101,233,255,.035);border-radius:999px;color:#bdeffa;font-size:11px;font-family:"DM Mono";text-transform:uppercase;letter-spacing:.08em}
+    .pulse{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 14px var(--lime)}
+    h1{font-family:"Space Grotesk";font-size:clamp(58px,8vw,106px);line-height:.91;letter-spacing:-.065em;margin:22px 0}
+    .glitch{position:relative;display:inline-block}
+    .glitch:before,.glitch:after{content:"NANOFOSSIL";position:absolute;inset:0;pointer-events:none;opacity:.18}
+    .glitch:before{color:var(--cyan);transform:translate(2px,-1px);clip-path:inset(0 0 63% 0)}
+    .glitch:after{color:var(--magenta);transform:translate(-2px,1px);clip-path:inset(63% 0 0 0)}
+    .hero p{max-width:650px;color:var(--muted);font-size:18px}
+    .hero-sub{font-size:13px!important;color:#7f879b!important;margin-top:10px}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0 26px}
+    .microline{display:flex;gap:15px;flex-wrap:wrap;color:#7d879a;font-family:"DM Mono";font-size:11px}
+    .microline span{padding-right:15px;border-right:1px solid var(--line)}
+    .microline span:last-child{border:0}
+    .lens{position:absolute;right:24px;top:65%;transform:translateY(-50%);aspect-ratio:9/16;max-height:640px;max-width:380px;width:100%;border:1px solid var(--line);border-radius:32px;background:linear-gradient(150deg,rgba(255,255,255,.04),rgba(255,255,255,.01));overflow:hidden;box-shadow:var(--glow);z-index:0}
+    .lens:before{content:"";position:absolute;inset:-20%;background:conic-gradient(from 0deg,transparent 0 22%,rgba(101,233,255,.18),transparent 35%,rgba(255,90,200,.14),transparent 55%,rgba(123,124,255,.2),transparent 73%);filter:blur(30px);animation:spin 18s linear infinite}
+    @keyframes spin{to{transform:rotate(1turn)}}
+    .lens-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(101,233,255,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(180,108,255,.08) 1px,transparent 1px);background-size:42px 42px;transform:perspective(800px) rotateX(58deg) scale(1.35);transform-origin:center bottom;opacity:.35}
+    .lens-core{position:absolute;left:50%;top:50%;width:230px;height:230px;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.25);box-shadow:0 0 70px rgba(101,233,255,.15),inset 0 0 55px rgba(180,108,255,.12)}
+    .lens-core:before{content:"";position:absolute;inset:25px;border-radius:50%;border:1px solid rgba(101,233,255,.4);box-shadow:inset 0 0 50px rgba(101,233,255,.1)}
+    .lens-core:after{content:"NANO / TRACE / EVIDENCE";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;font-family:"DM Mono";font-size:10px;letter-spacing:.18em;color:#bcecf5}
+    .scanline{position:absolute;left:6%;right:6%;height:1px;background:linear-gradient(90deg,transparent,rgba(101,233,255,.7),rgba(255,90,200,.45),transparent);box-shadow:0 0 18px rgba(101,233,255,.35);top:29%;animation:scan 5s ease-in-out infinite}
+    @keyframes scan{0%,100%{transform:translateY(0)}50%{transform:translateY(250px)}}
+    .telemetry{position:absolute;left:24px;right:24px;bottom:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .telemetry .cell{padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.22)}
+    .label{font-family:"DM Mono";font-size:9px;color:#747f95;text-transform:uppercase;letter-spacing:.08em}
+    .value{font-family:"DM Mono";font-size:13px;color:#e8eef8;margin-top:3px}
+    section{max-width:var(--max);padding:100px 24px;margin:auto}
+    .section-kicker{font:10px "DM Mono";text-transform:uppercase;letter-spacing:.16em;color:#7d879a;margin-bottom:12px}
+    h2{font-family:"Space Grotesk";font-size:clamp(36px,5vw,58px);letter-spacing:-.04em;margin:0 0 14px}
+    .section-copy{color:var(--muted);max-width:720px;font-size:16px}
+    .feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:38px}
+    .card{border:1px solid var(--line);border-radius:18px;padding:28px;background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.012));position:relative;overflow:hidden}
+    .card:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 34%,rgba(255,255,255,.05) 50%,transparent 66%);transform:translateX(-120%);transition:transform .6s}
+    .card:hover:after{transform:translateX(120%)}
+    .card:hover{border-color:rgba(101,233,255,.2);box-shadow:0 20px 70px rgba(0,0,0,.22)}
+    .num{font:11px "DM Mono";color:#7d879a}
+    .card h3{font:23px "Space Grotesk";margin:18px 0 8px}
+    .card p{color:var(--muted);font-size:14px;margin:0}
+    .accentline{width:80px;height:2px;margin-top:20px;background:linear-gradient(90deg,var(--cyan),var(--magenta),transparent)}
+    .economy{display:grid;grid-template-columns:.8fr 1.2fr;gap:16px;align-items:stretch}
+    .bigstat{border-radius:22px;padding:34px;border:1px solid rgba(199,255,117,.16);background:radial-gradient(circle at 20% 10%,rgba(199,255,117,.08),transparent 40%),rgba(255,255,255,.02)}
+    .bigstat .mega{font:700 88px/1 "Space Grotesk";letter-spacing:-.07em}
+    .bigstat .mega span{color:var(--lime)}
+    .bigstat p{color:#a7b2bd}
+    .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+    .stage{padding:20px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02);min-height:190px}
+    .stage strong{font-family:"DM Mono";font-size:11px;color:#9eabc0}
+    .stage h4{font:600 18px "Space Grotesk";margin:18px 0 8px}
+    .stage p{font-size:12px;color:#7f8899;margin:0}
+    .feature-break{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .mono-panel{font:12px "DM Mono";color:#aeb6c5;line-height:1.85}
+    .mono-panel .cyan{color:var(--cyan)} .mono-panel .violet{color:var(--violet)} .mono-panel .lime{color:var(--lime)}
+    .quote{padding:34px;border-left:2px solid var(--cyan);background:linear-gradient(90deg,rgba(101,233,255,.05),transparent);border-radius:0 18px 18px 0}
+    .quote p{font:22px/1.45 "Space Grotesk";color:#e7edf7;margin:0 0 12px}
+    .quote span{font:11px "DM Mono";color:#7f8899}
+    .cta{padding:120px 24px 140px;text-align:center}
+    .cta-box{max-width:860px;margin:auto;padding:60px 28px;border:1px solid rgba(101,233,255,.18);border-radius:28px;background:radial-gradient(circle at 50% 0%,rgba(101,233,255,.09),transparent 50%),linear-gradient(135deg,rgba(255,255,255,.045),rgba(255,255,255,.01));box-shadow:var(--glow)}
+    .cta h2{font-size:clamp(44px,7vw,76px)}
+    footer{border-top:1px solid var(--line);padding:26px 24px;color:#687083;font:10px "DM Mono";letter-spacing:.08em}
+    .footer-inner{max-width:var(--max);margin:auto;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+    /* === COSMIC EFFECTS === */
+.galaxy{position:fixed;width:900px;height:900px;border-radius:50%;pointer-events:none;z-index:0;opacity:.18;
+  background:conic-gradient(from 0deg,transparent 0deg,rgba(180,108,255,.22) 50deg,transparent 110deg,rgba(255,183,107,.16) 170deg,transparent 230deg,rgba(101,233,255,.18) 290deg,transparent 350deg);
+  filter:blur(55px);top:-220px;right:-280px;animation:galaxySpin 40s linear infinite}
+.galaxy:nth-child(2){width:600px;height:600px;bottom:-120px;left:-180px;top:auto;right:auto;opacity:.14;animation:galaxySpin 60s linear infinite reverse;background:conic-gradient(from 180deg,transparent 0deg,rgba(255,183,107,.20) 60deg,transparent 130deg,rgba(180,108,255,.14) 200deg,transparent 270deg)}
+@keyframes galaxySpin{to{transform:rotate(360deg)}}
+.blackhole{position:fixed;width:400px;height:400px;border-radius:50%;pointer-events:none;z-index:0;opacity:.30;
+  background:radial-gradient(circle at 50% 50%,#000 0%,#000 18%,rgba(180,108,255,.14) 28%,rgba(255,183,107,.10) 42%,rgba(101,233,255,.06) 58%,transparent 75%);
+  filter:blur(3px);bottom:3%;left:-140px;animation:bhPulse 6s ease-in-out infinite}
+.blackhole::before{content:'';position:absolute;inset:-40px;border-radius:50%;border:1px solid rgba(180,108,255,.08);animation:bhRing 10s linear infinite}
+.blackhole::after{content:'';position:absolute;inset:-80px;border-radius:50%;border:1px solid rgba(255,183,107,.05);animation:bhRing 15s linear infinite reverse}
+@keyframes bhPulse{0%,100%{transform:scale(1);opacity:.20}50%{transform:scale(1.15);opacity:.35}}
+@keyframes bhRing{to{transform:rotate(360deg)}}
+.nebula{position:fixed;width:600px;height:600px;border-radius:50%;pointer-events:none;z-index:0;opacity:.12;
+  background:radial-gradient(circle at 40% 40%,rgba(180,108,255,.35),rgba(140,60,220,.15),transparent 50%),radial-gradient(circle at 60% 60%,rgba(255,183,107,.25),rgba(220,150,60,.12),transparent 45%),radial-gradient(circle at 50% 50%,rgba(101,233,255,.12),transparent 55%);
+  filter:blur(70px);top:30%;left:50%;transform:translate(-50%,-50%);animation:nebulaDrift 20s ease-in-out infinite alternate}
+@keyframes nebulaDrift{0%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-45%,-55%) scale(1.15)}}
+.meteor{position:fixed;width:3px;height:3px;background:#fff;border-radius:50%;pointer-events:none;z-index:0;opacity:0;box-shadow:0 0 6px rgba(255,255,255,.8),0 0 12px rgba(180,108,255,.4)}
+.meteor::after{content:'';position:absolute;top:0;left:0;width:160px;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(180,108,255,.4),rgba(255,183,107,.2),transparent);transform:rotate(-45deg);transform-origin:0 0;filter:blur(.5px)}
+.meteor:nth-child(1){top:5%;left:90%;animation:meteorFall 4s linear infinite 3s}
+.meteor:nth-child(2){top:15%;left:75%;animation:meteorFall 5.5s linear infinite 8s}
+.meteor:nth-child(3){top:3%;left:55%;animation:meteorFall 4.5s linear infinite 1.5s}
+.meteor:nth-child(4){top:12%;left:95%;animation:meteorFall 5s linear infinite 11s}
+.meteor:nth-child(5){top:8%;left:40%;animation:meteorFall 4.2s linear infinite 6s}
+@keyframes meteorFall{0%{opacity:0;transform:translate(0,0) scale(.5)}8%{opacity:1;transform:translate(0,0) scale(1)}92%{opacity:1}100%{opacity:0;transform:translate(-500px,500px) scale(.8)}}
+.stars-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+/* === LIQUID GLASS === */
+.liquid-glass{
+  background:rgba(255,255,255,.02);
+  backdrop-filter:blur(24px) saturate(140%);
+  -webkit-backdrop-filter:blur(24px) saturate(140%);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 0 2px 1px rgba(255,255,255,.12), inset 0 0 10px 4px rgba(255,255,255,.05), inset 0 4px 16px rgba(17,17,26,.03), 0 8px 32px rgba(0,0,0,.35);
+  border-radius:24px;
+  transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;
+  position:relative;overflow:hidden}
+.liquid-glass::before{content:'';position:absolute;inset:0;border-radius:24px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 40%,rgba(180,108,255,.04) 60%,transparent 100%);
+  mix-blend-mode:overlay;opacity:.5}
+.liquid-glass::after{content:'';position:absolute;inset:-2px;border-radius:26px;pointer-events:none;
+  background:conic-gradient(from 0deg at 30% 30%,transparent 0deg,rgba(101,233,255,.15) 60deg,transparent 120deg,rgba(180,108,255,.12) 180deg,transparent 240deg,rgba(255,183,107,.10) 300deg,transparent 360deg);
+  filter:blur(8px);opacity:.4;z-index:-1}
+.liquid-glass:hover{
+  border-color:rgba(180,108,255,.25);
+  box-shadow:inset 0 0 2px 1px rgba(255,255,255,.18), inset 0 0 10px 4px rgba(180,108,255,.10), inset 0 4px 16px rgba(17,17,26,.03), 0 12px 40px rgba(0,0,0,.45), 0 0 40px rgba(180,108,255,.08)}
+.liquid-glass:hover::before{opacity:.7}
+.liquid-glass-strong{
+  background:rgba(255,255,255,.015);
+  backdrop-filter:blur(40px) saturate(160%);
+  -webkit-backdrop-filter:blur(40px) saturate(160%);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:inset 0 0 2px 1px rgba(255,255,255,.18), inset 0 0 10px 4px rgba(255,255,255,.08), inset 0 4px 16px rgba(17,17,26,.04), 0 12px 40px rgba(0,0,0,.45);
+  border-radius:24px;
+  transition:transform .3s ease,box-shadow .3s ease;
+  position:relative;overflow:hidden}
+.liquid-glass-strong::before{content:'';position:absolute;inset:0;border-radius:24px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 35%,rgba(255,183,107,.05) 55%,transparent 100%);
+  mix-blend-mode:overlay;opacity:.6}
+.liquid-glass-strong::after{content:'';position:absolute;inset:-3px;border-radius:27px;pointer-events:none;
+  background:conic-gradient(from 180deg at 70% 70%,transparent 0deg,rgba(255,183,107,.15) 60deg,transparent 120deg,rgba(101,233,255,.12) 180deg,transparent 240deg,rgba(180,108,255,.10) 300deg,transparent 360deg);
+  filter:blur(10px);opacity:.5;z-index:-1}
+.liquid-glass-strong:hover{
+  border-color:rgba(255,183,107,.20);
+  box-shadow:inset 0 0 2px 1px rgba(255,255,255,.22), inset 0 0 10px 4px rgba(255,183,107,.08), inset 0 4px 16px rgba(17,17,26,.04), 0 16px 50px rgba(0,0,0,.5), 0 0 50px rgba(255,183,107,.08)}
+.liquid-glass-strong:hover::before{opacity:.8}
+
+
+/* === HERO TAGLINE === */
+.hero-tagline{font-family:"Orbitron",sans-serif;font-size:clamp(14px,2vw,18px);letter-spacing:.25em;text-transform:uppercase;color:var(--cyan);text-shadow:0 0 20px rgba(101,233,255,.3),0 0 40px rgba(180,108,255,.15);margin-bottom:18px;animation:taglineGlow 3s ease-in-out infinite alternate}
+@keyframes taglineGlow{0%{text-shadow:0 0 20px rgba(101,233,255,.3),0 0 40px rgba(180,108,255,.15)}100%{text-shadow:0 0 30px rgba(101,233,255,.5),0 0 60px rgba(180,108,255,.25),0 0 80px rgba(255,183,107,.1)}}
+.hero-lead{font-size:clamp(16px,2.2vw,20px)!important;color:var(--muted);line-height:1.7;max-width:580px}
+
+/* === 3D CARDS === */
+.card{transform-style:preserve-3d;transition:transform .4s cubic-bezier(.23,1,.32,1),border-color .3s,box-shadow .3s}
+.card:hover{transform:translateY(-6px) scale(1.01)}
+.card .card-shine{position:absolute;inset:0;border-radius:18px;pointer-events:none;opacity:0;transition:opacity .4s;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.08) 0%,transparent 50%)}
+.card:hover .card-shine{opacity:1}
+
+/* === STORY SECTION === */
+.story-section{position:relative;overflow:hidden}
+.story-constellation{display:flex;flex-direction:column;gap:0;max-width:800px;margin:3rem auto;position:relative}
+.story-node{position:relative;padding:2rem 2.5rem;border-left:2px solid rgba(180,108,255,.3);margin-left:30px;opacity:0;transform:translateX(-20px);transition:all .8s ease}
+.story-node.visible{opacity:1;transform:translateX(0)}
+.story-node::before{content:'';position:absolute;left:-7px;top:2.4rem;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));box-shadow:0 0 12px rgba(101,233,255,.4)}
+.story-node h4{font-family:"Space Grotesk";font-size:1.1rem;color:var(--ink);margin-bottom:.5rem}
+.story-node p{color:var(--muted);font-size:.95rem;line-height:1.7;margin:0}
+.story-node .story-year{font-family:"DM Mono";font-size:.7rem;color:var(--cyan);letter-spacing:.15em;margin-bottom:.3rem}
+
+/* === ENHANCED ANIMATIONS === */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.float-anim{animation:float 6s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(101,233,255,.1)}50%{box-shadow:0 0 40px rgba(101,233,255,.25),0 0 60px rgba(180,108,255,.1)}}
+.pulse-glow{animation:pulse-glow 4s ease-in-out infinite}
+@keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.gradient-text{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--hot),var(--cyan));background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradient-shift 8s ease infinite}
+
+/* === ENHANCED REVEAL === */
+.reveal{opacity:0;transform:translateY(40px) scale(.98);transition:all 1s cubic-bezier(.23,1,.32,1)}
+.reveal.visible{opacity:1;transform:translateY(0) scale(1)}
+
+/* === AMBIENT ORBS === */
+.ambient-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(80px);mix-blend-mode:screen}
+.ambient-orb.purple{width:550px;height:550px;background:radial-gradient(circle,rgba(180,108,255,.35),rgba(140,60,220,.15),transparent 55%);top:8%;right:-5%;animation:orbDrift1 25s ease-in-out infinite alternate}
+.ambient-orb.gold{width:500px;height:500px;background:radial-gradient(circle,rgba(255,183,107,.28),rgba(220,150,60,.12),transparent 50%);bottom:5%;left:-8%;animation:orbDrift2 30s ease-in-out infinite alternate}
+.ambient-orb.cyan{width:400px;height:400px;background:radial-gradient(circle,rgba(101,233,255,.20),rgba(60,180,220,.10),transparent 50%);top:75%;right:15%;animation:orbDrift3 20s ease-in-out infinite alternate}
+.ambient-orb.magenta{width:350px;height:350px;background:radial-gradient(circle,rgba(255,90,200,.18),rgba(200,60,160,.08),transparent 55%);top:45%;left:-6%;animation:orbDrift1 28s ease-in-out infinite alternate reverse}
+.ambient-orb.lime{width:300px;height:300px;background:radial-gradient(circle,rgba(199,255,117,.15),rgba(140,220,80,.08),transparent 55%);top:20%;left:60%;animation:orbDrift2 22s ease-in-out infinite alternate reverse}
+@keyframes orbDrift1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,-30px) scale(1.2)}}
+@keyframes orbDrift2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-30px,20px) scale(1.15)}}
+@keyframes orbDrift3{0%{transform:translate(0,0) scale(1)}100%{transform:translate(20px,40px) scale(1.1)}}
+
+/* === LENS FLARE (scroll-based) === */
+.lens-flare{position:fixed;pointer-events:none;z-index:2;mix-blend-mode:screen;transition:opacity .3s ease}
+.lens-flare-main{width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.45) 0%,rgba(180,108,255,.2) 20%,rgba(255,183,107,.1) 40%,transparent 60%);filter:blur(1px);opacity:.7}
+.lens-flare-hex{width:80px;height:80px;background:radial-gradient(circle,rgba(255,255,255,.6) 0%,rgba(180,108,255,.25) 25%,rgba(255,183,107,.15) 50%,transparent 70%);clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);filter:blur(1px);opacity:.45}
+.lens-flare-ring{width:140px;height:140px;border-radius:50%;border:2px solid rgba(255,255,255,.12);filter:blur(1px);opacity:.35}
+.lens-flare-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 12px rgba(255,255,255,.6),0 0 24px rgba(180,108,255,.4),0 0 36px rgba(255,183,107,.2);filter:blur(.5px)}
+.lens-flare-glow{width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(180,108,255,.1),rgba(255,183,107,.05),transparent 50%);filter:blur(50px);opacity:.5}
+
+
+/* === BROWSER FRAME (screenshots) === */
+.browser-frame{background:var(--bg2);border-radius:24px;box-shadow:0 25px 80px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.06);overflow:hidden;max-width:1100px;margin:0 auto;transform:perspective(1200px) rotateX(2deg);transition:transform .5s ease;border:1px solid var(--line)}
+.browser-frame:hover{transform:perspective(1200px) rotateX(0deg) translateY(-5px)}
+.browser-header{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));padding:.7rem 1rem;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid var(--line)}
+.browser-dot{width:12px;height:12px;border-radius:50%}
+.bd-red{background:#ff5f57}.bd-yellow{background:#febc2e}.bd-green{background:#28c840}
+.browser-url{flex:1;background:rgba(255,255,255,.04);border-radius:6px;padding:.3rem 1rem;font-size:.8rem;color:var(--faint);text-align:center;border:1px solid var(--line);font-family:"DM Mono"}
+.browser-content{padding:0;min-height:400px;background:var(--bg)}
+.screenshot-item{margin-bottom:5rem}
+.screenshot-caption{text-align:center;margin-top:1.5rem}
+.screenshot-caption h4{font-family:"Space Grotesk";font-size:1.4rem;color:var(--ink);font-weight:600;margin-bottom:.3rem}
+.screenshot-caption p{color:var(--faint);font-size:.95rem;max-width:500px;margin:0 auto}
+
+/* === WINERY / ARCHITECTURE === */
+.winery-section{background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:100px 24px}
+.winery-inner{max-width:var(--max);margin:0 auto}
+.arch-flow{display:flex;flex-direction:column;gap:0;max-width:700px;margin:3rem auto}
+.arch-node{background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:18px;padding:1.5rem 2rem;display:flex;align-items:center;gap:1.2rem;position:relative}
+.arch-node.primary{background:rgba(101,233,255,.06);border-color:rgba(101,233,255,.2)}
+.arch-arrow{display:flex;justify-content:center;padding:.5rem 0;color:var(--cyan);font-size:1.2rem;font-family:"DM Mono"}
+.arch-icon{width:44px;height:44px;border-radius:12px;background:rgba(101,233,255,.06);display:flex;align-items:center;justify-content:center;color:var(--cyan);flex-shrink:0;border:1px solid rgba(101,233,255,.12);font-size:1.1rem}
+.arch-node.primary .arch-icon{background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000}
+.arch-text h4{color:var(--ink);font-family:"Space Grotesk";font-size:1rem;font-weight:600;margin-bottom:.2rem}
+.arch-text p{color:var(--muted);font-size:.85rem;margin:0}
+.pipeline-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin:3rem 0}
+.pipeline-step{background:rgba(255,255,255,.015);border:1px solid var(--line);border-radius:20px;padding:1.8rem;position:relative;transition:all .3s}
+.pipeline-step:hover{background:rgba(255,255,255,.03);border-color:rgba(101,233,255,.15)}
+.pipeline-num{position:absolute;top:-12px;left:1.5rem;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;font-family:"DM Mono"}
+.pipeline-step h4{color:var(--ink);font-family:"Space Grotesk";font-size:.95rem;font-weight:600;margin:.5rem 0 .5rem}
+.pipeline-step p{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+.quote-block{background:rgba(255,255,255,.02);border-left:2px solid var(--cyan);padding:2rem 2.5rem;border-radius:0 18px 18px 0;margin:2.5rem 0;max-width:700px;border:1px solid var(--line);border-left-width:2px}
+.quote-block p{font-family:"Space Grotesk";font-size:1.25rem;color:var(--ink-soft);margin:0;line-height:1.5;font-weight:500}
+.quote-block .attribution{margin-top:1rem;font-size:.85rem;color:var(--faint);font-family:"DM Mono"}
+
+/* === FAQ === */
+.faq-item{border-bottom:1px solid var(--line);padding:1.5rem 0}
+.faq-question{font-weight:600;color:var(--ink);font-size:1.05rem;margin-bottom:.8rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:"Space Grotesk"}
+.faq-answer{color:var(--muted);line-height:1.7;max-width:700px}
+
+/* === REVEAL === */
+.reveal{opacity:0;transform:translateY(30px);transition:all .8s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* === NASA FONT for brand only === */
+.nasa{font-family:Orbitron,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+
+/* === NEW SECTIONS === */
+.partner-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+.careers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.pricing-card{text-align:center;padding:3rem 2rem}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.tag-pill{display:inline-block;padding:.25rem .7rem;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:100px;font-size:.75rem;font-weight:500;color:var(--cyan);margin-right:.4rem;margin-bottom:.4rem;font-family:"DM Mono"}
+
+    nav.scrolled{background:rgba(5,6,10,.65);border-color:rgba(180,108,255,.12);box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.10),0 0 30px rgba(180,108,255,.05)}
+    nav.scrolled::after{opacity:.7}
+    @media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:80px}.lens{right:50%;top:55%;transform:translate(50%,-50%);opacity:.15;max-height:520px;max-width:320px;pointer-events:none}.lens-core{width:55%}.navlinks{display:none}.feature-grid,.economy,.feature-break{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.hero{padding-left:18px;padding-right:18px}.hero p{font-size:16px}.lens{aspect-ratio:3/4;max-height:420px;opacity:.12}.scanline{animation:none;opacity:.6;top:35%}.telemetry{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr}section{padding:75px 18px}}
+  </style>
 </head>
 <body>
-    <div class="paper-grain"></div>
-
-    <nav class="site-nav">
-        <div class="nav-inner">
-            <div class="nav-brand">
-                <svg viewBox="0 0 48 48" fill="none" width="28" height="28">
-                    <path d="M24 4L26.5 18L40 24L26.5 30L24 44L21.5 30L8 24L21.5 18L24 4Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
-                    <circle cx="24" cy="24" r="3" stroke="#1D4533" stroke-width="1.2" fill="none"/>
-                </svg>
-                Huygens
-            </div>
-            <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#screenshots">Screenshots</a></li>
-                <li><a href="#winery">Winery</a></li>
-                <li><a href="#architecture">Architecture</a></li>
-                <li><a href="#setup">Setup</a></li>
-                <li><a href="#faq">FAQ</a></li>
-            </ul>
-           <button class="nav-cta" onclick="window.location.href='app.html'">Open Nanofossil</button>
-
+  <div class="stars" id="stars"><div class="orb a"></div><div class="orb b"></div></div>
+<div class="galaxy"></div>
+<div class="blackhole"></div>
+<div class="meteor"></div>
+<div class="meteor"></div>
+<div class="meteor"></div>
+<div class="meteor"></div>
+<div class="meteor"></div>
+<canvas class="stars-canvas" id="starsCanvas"></canvas>
+<div class="galaxy"></div>
+<div class="nebula"></div>
+<div class="ambient-orb purple"></div>
+<div class="ambient-orb gold"></div>
+<div class="ambient-orb cyan"></div>
+<div class="ambient-orb magenta"></div>
+<div class="ambient-orb lime"></div>
+<div class="lens-flare lens-flare-main" id="flareMain"></div>
+<div class="lens-flare lens-flare-hex" id="flareHex"></div>
+<div class="lens-flare lens-flare-ring" id="flareRing"></div>
+<div class="lens-flare lens-flare-dot" id="flareDot"></div>
+<div class="lens-flare lens-flare-glow" id="flareGlow"></div>
+  <div class="wrap">
+    <nav>
+      <div class="nav">
+        <a class="brand" href="#top"><img src="favicon.png" alt=""><span>Huygens / Nanofossil</span></a>
+        <div class="navlinks">
+          <a href="#instrument">Instrument</a><a href="#screenshots">Screenshots</a><a href="#winery">Research</a><a href="#partner">Partner</a><a href="#careers">Careers</a><a href="#faq">FAQ</a><a href="#contact">Contact</a>
         </div>
+        <div class="navcta"><a class="btn primary" href="app.html">Open instrument ↗</a></div>
+      </div>
     </nav>
 
-    <section class="hero-section" id="top">
-        <div class="hero-badge"><span class="dot"></span>Autonomous Research Instrument v2.0</div>
-        <h1 class="hero-title">Huygens<br><span class="accent">Nanofossil</span></h1>
-        <p class="hero-subtitle">Give it a question. Let it investigate the evidence. Receive a carefully synthesized answer. No paid APIs. No permanent server. The rabbit hole is yours.</p>
-        <div class="hero-cta-group">
-            <button class="btn-primary" onclick="document.getElementById('app-demo').scrollIntoView({behavior:'smooth'})">
-                Start Researching
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
-            <button class="btn-secondary" onclick="document.getElementById('winery').scrollIntoView({behavior:'smooth'})">Learn about Winery</button>
+    <main id="top">
+      <section class="hero">
+        <div>
+          <div class="hero-tagline">The Rabbit Hole is Yours</div>
+          <h1><span class="glitch nasa">NANOFOSSIL</span></h1>
+          <p class="hero-lead">An autonomous research instrument that turns loose thoughts into structured, sourced, cross-checked dossiers. No API keys. No subscriptions. Just curiosity.</p>
+          <p class="hero-sub">Powered by Winery. Designed for the rabbit holes that deserve more than one search result.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="app.html">Start a research run ↗</a>
+            <a class="btn ghost" href="#instrument">See how it thinks ↓</a>
+          </div>
+          <div class="microline"><span>Qwen3‑4B</span><span>DuckDuckGo</span><span>GitHub Actions</span><span>Structured JSON</span></div>
         </div>
+        <div class="lens" aria-hidden="true">
+          <div class="lens-grid"></div><div class="scanline"></div><div class="lens-core"></div>
+          <div class="telemetry">
+            <div class="cell"><div class="label">mode</div><div class="value">evidence-first</div></div>
+            <div class="cell"><div class="label">output</div><div class="value">research.json</div></div>
+            <div class="cell"><div class="label">compute</div><div class="value">₹0 / run*</div></div>
+          </div>
+        </div>
+      </section>
 
-        <div class="browser-frame reveal">
+      <section id="instrument">
+        <div class="section-kicker">01 / instrument</div>
+        <h2>It does not answer.<br>It investigates.</h2>
+        <p class="section-copy">Nanofossil treats research as a pipeline, not a conversation. It breaks a question into search angles, pulls actual source material, compares claims and then asks its local model to synthesize what survives.</p>
+        <div class="feature-grid">
+          <article class="card"><div class="card-shine"></div><div class="num">01 / DECOMPOSE</div><h3>Questions become angles.</h3><p>Winery turns a broad prompt into several targeted search directions instead of gambling on one query.</p><div class="accentline"></div></article>
+          <article class="card"><div class="card-shine"></div><div class="num">02 / FETCH</div><h3>Pages become evidence.</h3><p>Top results are fetched and stripped to readable text, so the model sees substance rather than browser chrome.</p><div class="accentline"></div></article>
+          <article class="card"><div class="card-shine"></div><div class="num">03 / CROSS-CHECK</div><h3>Claims get friction.</h3><p>Conflicts, dates, and source types are surfaced so a polished paragraph cannot quietly become “truth”.</p><div class="accentline"></div></article>
+          <article class="card"><div class="card-shine"></div><div class="num">04 / SYNTHESIZE</div><h3>The answer becomes a document.</h3><p>The final result is structured: executive summary, findings, evidence assessment, confidence notes and a numbered source list.</p><div class="accentline"></div></article>
+        </div>
+      </section>
+
+      <section id="screenshots">
+        <div class="section-kicker">Interface</div>
+        <h2>Every state, designed.</h2>
+        <p class="section-copy">From authentication to the final report, every screen is intentional. No clutter. No dark patterns. Just research.</p>
+
+        <div class="screenshot-item reveal" style="margin-top:48px">
+          <div class="browser-frame">
             <div class="browser-header">
-                <div class="browser-dot bd-red"></div>
-                <div class="browser-dot bd-yellow"></div>
-                <div class="browser-dot bd-green"></div>
-                <div class="browser-url">nanofossil.huygens.dev</div>
+              <div class="browser-dot bd-red"></div><div class="browser-dot bd-yellow"></div><div class="browser-dot bd-green"></div>
+              <div class="browser-url">nanofossil.vercel.app/app</div>
             </div>
-            <div class="browser-content">
-                <div class="ss-landing">
-                    <div class="ss-header">
-                        <div class="ss-header-brand">Huygens</div>
-                        <div class="ss-header-actions">
-                            <div class="ss-icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 8.68 4.68a1.65 1.65 0 0 0 1.51-1H11a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
-                            <div class="ss-icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-                        </div>
-                    </div>
-                    <div class="ss-hero-center">
-                        <h1>
-                            <span style="display:inline-flex;align-items:center;">
-                                <svg viewBox="0 0 48 48" fill="none" width="40" height="40" style="margin-right:8px;">
-                                    <path d="M24 4L26.5 18L40 24L26.5 30L24 44L21.5 30L8 24L21.5 18L24 4Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
-                                    <circle cx="24" cy="24" r="3" stroke="#1D4533" stroke-width="1.2" fill="none"/>
-                                </svg>
-                            </span>
-                            Nanofossil
-                        </h1>
-                        <p class="tagline">The rabbit hole is yours.</p>
-                    </div>
-                    <div class="ss-input-wrap">
-                        <input type="text" placeholder="What would you like to understand?" readonly>
-                        <div class="ss-submit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-                    </div>
-                    <div class="ss-chips">
-                        <div class="ss-chip">Why did Concorde fail commercially?</div>
-                        <div class="ss-chip">Compare nuclear fusion approaches</div>
-                        <div class="ss-chip">History of solid-state batteries</div>
-                        <div class="ss-chip">India's semiconductor strategy</div>
-                    </div>
+            <div class="browser-content" style="padding:3rem;display:flex;align-items:center;justify-content:center;min-height:420px;background:linear-gradient(135deg,var(--bg),var(--bg2));">
+              <div class="liquid-glass" style="padding:2.5rem;max-width:380px;width:100%;text-align:center;">
+                <div style="width:42px;height:42px;margin:0 auto 1rem;border:1.5px solid var(--cyan);border-radius:50%;display:grid;place-items:center;color:var(--cyan);font-family:Orbitron;font-size:14px;font-weight:700;">N</div>
+                <h3 style="font-family:Orbitron;font-size:1.4rem;letter-spacing:.06em;margin-bottom:.5rem;">NANOFOSSIL</h3>
+                <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;">Sign in to start researching.</p>
+                <div style="background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;text-align:left;color:var(--faint);font-size:.85rem;margin-bottom:1rem;">you@example.com</div>
+                <div style="background:var(--ink);color:var(--bg);border-radius:10px;padding:.7rem;font-size:.85rem;font-weight:600;cursor:default;">Send magic link</div>
+                <div style="display:flex;align-items:center;gap:1rem;margin:1.2rem 0;color:var(--faint);font-size:.75rem;font-family:DM Mono;"><span style="flex:1;height:1px;background:var(--line)"></span>OR<span style="flex:1;height:1px;background:var(--line)"></span></div>
+                <div style="background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:.7rem;font-size:.85rem;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:.5rem;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                  Continue with GitHub
                 </div>
+              </div>
             </div>
-        </div>
-    </section>
-
-    <section style="padding-top:0;">
-        <div class="stats-bar reveal">
-            <div class="stat-item"><div class="stat-number">Rs0</div><div class="stat-label">Compute cost per run</div></div>
-            <div class="stat-item"><div class="stat-number">5</div><div class="stat-label">Research pipeline stages</div></div>
-            <div class="stat-item"><div class="stat-number">2.3GB</div><div class="stat-label">Model size (Q4_K_M)</div></div>
-            <div class="stat-item"><div class="stat-number">∞</div><div class="stat-label">Research questions</div></div>
-        </div>
-    </section>
-
-    <section id="features">
-        <div class="section-header reveal">
-            <span class="section-label">Capabilities</span>
-            <h2>Built for depth, not speed</h2>
-            <p>Nanofossil doesn't guess. It plans, searches, fetches, cross-checks, and synthesizes — the way a researcher actually works.</p>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card reveal">
-                <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
-                <h4>Autonomous Web Search</h4>
-                <p>Winery plans 3–5 targeted search queries from your question, then executes them via DuckDuckGo. No keyword guessing required.</p>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-                <h4>Source Fetching & Parsing</h4>
-                <p>Top results are fetched, parsed, and stripped to readable text. Winery extracts the signal from the noise of modern web pages.</p>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
-                <h4>Cross-Check Evidence</h4>
-                <p>Conflicting claims are flagged. Dates are verified. Sources are categorized as primary or secondary. You get the full picture.</p>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-                <h4>Structured Reports</h4>
-                <p>Every output is a JSON document with an executive summary, key findings, evidence assessment, confidence notes, and a full source list.</p>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-                <h4>Zero-Cost Compute</h4>
-                <p>Runs entirely on GitHub Actions free tier. The Qwen3-4B model is cached after first download. No credit card, no API keys, no limits.</p>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
-                <h4>Sync Across Devices</h4>
-                <p>Supabase handles authentication and research history. Sign in with magic link or GitHub OAuth. Your research follows you everywhere.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="screenshots-section" id="screenshots">
-        <div class="section-header reveal">
-            <span class="section-label">Interface</span>
-            <h2>Every state, designed</h2>
-            <p>From authentication to the final report, every screen is intentional. No clutter. No dark patterns. Just research.</p>
+          </div>
+          <div class="screenshot-caption">
+            <h4>Authentication Gate</h4>
+            <p>Sign in via magic link or GitHub OAuth. Your research history syncs across devices.</p>
+          </div>
         </div>
 
-        <!-- Screenshot 1: Auth -->
         <div class="screenshot-item reveal">
-            <div class="browser-frame">
-                <div class="browser-header">
-                    <div class="browser-dot bd-red"></div>
-                    <div class="browser-dot bd-yellow"></div>
-                    <div class="browser-dot bd-green"></div>
-                    <div class="browser-url">nanofossil.huygens.dev/app</div>
-                </div>
-                <div class="browser-content">
-                    <div class="ss-auth">
-                        <div class="ss-auth-box">
-                            <svg class="ss-logo" viewBox="0 0 48 48" fill="none">
-                                <path d="M24 4L26.5 18L40 24L26.5 30L24 44L21.5 30L8 24L21.5 18L24 4Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
-                                <circle cx="24" cy="24" r="3" stroke="#1D4533" stroke-width="1.2" fill="none"/>
-                            </svg>
-                            <h3>Nanofossil</h3>
-                            <p class="ss-sub">Sign in to start researching.</p>
-                            <div class="ss-input" style="text-align:left;">you@example.com</div>
-                            <div class="ss-btn-full">Send magic link</div>
-                            <div class="ss-divider">or</div>
-                            <div class="ss-github-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                                Continue with GitHub
-                            </div>
-                            <p class="ss-sub" style="margin-top:1.5rem;margin-bottom:0;font-size:0.75rem;">Your research history syncs across devices.</p>
-                        </div>
-                    </div>
-                </div>
+          <div class="browser-frame">
+            <div class="browser-header">
+              <div class="browser-dot bd-red"></div><div class="browser-dot bd-yellow"></div><div class="browser-dot bd-green"></div>
+              <div class="browser-url">nanofossil.vercel.app/app — Researching</div>
             </div>
-            <div class="screenshot-caption">
-                <h4>Authentication Gate</h4>
-                <p>Sign in via magic link or GitHub OAuth. Supabase handles sessions securely. Your research history persists across devices.</p>
+            <div class="browser-content" style="padding:2.5rem 3rem;min-height:420px;background:var(--bg);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2.5rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;font-weight:600;color:var(--cyan);font-family:Space Grotesk;"><span style="font-family:Orbitron;font-size:.8rem;">N</span> Nanofossil</div>
+                <div style="font-family:DM Mono;font-size:.7rem;color:var(--faint);background:rgba(255,255,255,.03);padding:.3rem .8rem;border-radius:6px;border:1px solid var(--line);">job-a7f3d9e2</div>
+              </div>
+              <div style="text-align:center;margin-bottom:2.5rem;">
+                <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--cyan);margin-bottom:.5rem;">Researching</div>
+                <h3 style="font-size:1.4rem;color:var(--ink);font-family:Space Grotesk;">Why did Concorde fail commercially?</h3>
+              </div>
+              <div style="max-width:520px;margin:0 auto;">
+                <div style="display:flex;align-items:flex-start;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--line);">
+                  <div style="width:32px;height:32px;border-radius:10px;background:rgba(199,255,117,.12);display:grid;place-items:center;color:var(--lime);flex-shrink:0;font-size:.9rem;">✓</div>
+                  <div style="flex:1;"><div style="font-weight:500;color:var(--ink-soft);font-size:.9rem;">Understanding the question</div><div style="font-size:.75rem;color:var(--faint);margin-top:.1rem;">Identifying sub-questions and search angles</div></div>
+                  <div style="color:var(--lime);font-size:1rem;">✓</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--line);">
+                  <div style="width:32px;height:32px;border-radius:10px;background:rgba(199,255,117,.12);display:grid;place-items:center;color:var(--lime);flex-shrink:0;font-size:.9rem;">✓</div>
+                  <div style="flex:1;"><div style="font-weight:500;color:var(--ink-soft);font-size:.9rem;">Researching sources</div><div style="font-size:.75rem;color:var(--faint);margin-top:.1rem;">Searching and fetching source pages</div></div>
+                  <div style="color:var(--lime);font-size:1rem;">✓</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--line);">
+                  <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),var(--violet));display:grid;place-items:center;color:#000;flex-shrink:0;font-size:.9rem;font-weight:700;">●</div>
+                  <div style="flex:1;"><div style="font-weight:500;color:var(--ink-soft);font-size:.9rem;">Cross-checking evidence</div><div style="font-size:.75rem;color:var(--faint);margin-top:.1rem;">Comparing claims and checking dates</div></div>
+                  <div style="color:var(--cyan);font-size:1rem;">●</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--line);opacity:.5;">
+                  <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.03);display:grid;place-items:center;color:var(--faint);flex-shrink:0;font-size:.9rem;">○</div>
+                  <div style="flex:1;"><div style="font-weight:500;color:var(--ink-soft);font-size:.9rem;">Synthesizing findings</div><div style="font-size:.75rem;color:var(--faint);margin-top:.1rem;">Weighing the gathered evidence</div></div>
+                  <div style="color:var(--faint);font-size:1rem;">○</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:1rem;padding:1rem 0;opacity:.5;">
+                  <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.03);display:grid;place-items:center;color:var(--faint);flex-shrink:0;font-size:.9rem;">○</div>
+                  <div style="flex:1;"><div style="font-weight:500;color:var(--ink-soft);font-size:.9rem;">Writing the report</div><div style="font-size:.75rem;color:var(--faint);margin-top:.1rem;">Assembling the final structured dossier</div></div>
+                  <div style="color:var(--faint);font-size:1rem;">○</div>
+                </div>
+              </div>
             </div>
+          </div>
+          <div class="screenshot-caption">
+            <h4>Live Progress Tracking</h4>
+            <p>Five distinct stages. You always know what the engine is doing and why.</p>
+          </div>
         </div>
 
-        <!-- Screenshot 2: Researching -->
         <div class="screenshot-item reveal">
-            <div class="browser-frame">
-                <div class="browser-header">
-                    <div class="browser-dot bd-red"></div>
-                    <div class="browser-dot bd-yellow"></div>
-                    <div class="browser-dot bd-green"></div>
-                    <div class="browser-url">nanofossil.huygens.dev/app — Researching</div>
-                </div>
-                <div class="browser-content">
-                    <div class="ss-researching">
-                        <div class="ss-research-header">
-                            <div style="display:flex;align-items:center;gap:0.5rem;">
-                                <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z" stroke="#1D4533" stroke-width="1.5" fill="none"/></svg>
-                                <span style="font-weight:600;color:var(--forest);">Nanofossil</span>
-                            </div>
-                            <div class="ss-job-id">job-a7f3d9e2</div>
-                        </div>
-                        <div class="ss-question-display">
-                            <span class="ss-question-label">Researching</span>
-                            <h2>Why did Concorde fail commercially?</h2>
-                        </div>
-                        <div class="ss-progress-track">
-                            <div class="ss-step done">
-                                <div class="ss-step-icon"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.5"/></svg></div>
-                                <div class="ss-step-content"><span class="ss-step-name">Understanding the question</span><span class="ss-step-desc">Identifying the main questions and comparison criteria</span></div>
-                                <div class="ss-step-status">✓</div>
-                            </div>
-                            <div class="ss-step done">
-                                <div class="ss-step-icon"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5"/></svg></div>
-                                <div class="ss-step-content"><span class="ss-step-name">Researching sources</span><span class="ss-step-desc">Searching academic, institutional, industry and primary sources</span></div>
-                                <div class="ss-step-status">✓</div>
-                            </div>
-                            <div class="ss-step active">
-                                <div class="ss-step-icon"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
-                                <div class="ss-step-content"><span class="ss-step-name">Cross-checking evidence</span><span class="ss-step-desc">Comparing conflicting claims and checking dates</span></div>
-                                <div class="ss-step-status">●</div>
-                            </div>
-                            <div class="ss-step pending">
-                                <div class="ss-step-icon"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
-                                <div class="ss-step-content"><span class="ss-step-name">Synthesizing findings</span><span class="ss-step-desc">Combining the evidence into a coherent answer</span></div>
-                                <div class="ss-step-status">○</div>
-                            </div>
-                            <div class="ss-step pending">
-                                <div class="ss-step-icon"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 20h9" stroke="currentColor" stroke-width="1.5"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
-                                <div class="ss-step-content"><span class="ss-step-name">Writing the report</span><span class="ss-step-desc">Structuring the research into a useful document</span></div>
-                                <div class="ss-step-status">○</div>
-                            </div>
-                        </div>
-                        <div style="text-align:center;margin-top:2rem;">
-                            <span style="font-size:0.85rem;color:var(--ink-muted);cursor:pointer;">Cancel</span>
-                        </div>
-                    </div>
-                </div>
+          <div class="browser-frame">
+            <div class="browser-header">
+              <div class="browser-dot bd-red"></div><div class="browser-dot bd-yellow"></div><div class="browser-dot bd-green"></div>
+              <div class="browser-url">nanofossil.vercel.app/app — Report</div>
             </div>
-            <div class="screenshot-caption">
-                <h4>Live Progress Tracking</h4>
-                <p>Five distinct stages, each with its own icon and description. You always know what Winery is doing and why. The job ID lets you reference the run later.</p>
+            <div class="browser-content" style="padding:2.5rem 3rem;min-height:420px;background:var(--bg2);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--line);">
+                <div style="display:flex;align-items:center;gap:.5rem;font-weight:600;color:var(--cyan);font-family:Space Grotesk;"><span style="font-family:Orbitron;font-size:.8rem;">N</span> Nanofossil</div>
+                <div style="padding:.4rem 1rem;background:var(--ink);color:var(--bg);border-radius:8px;font-size:.75rem;font-weight:600;">New research</div>
+              </div>
+              <div style="max-width:640px;margin:0 auto;">
+                <h2 style="font-size:1.6rem;margin-bottom:.3rem;font-family:Space Grotesk;">Why Did Concorde Fail Commercially?</h2>
+                <div style="font-family:DM Mono;font-size:.7rem;color:var(--faint);margin-bottom:2rem;">NANOFOSSIL · August 20, 2026 · 12 SOURCES</div>
+                <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:1rem;"><strong style="color:var(--ink-soft);">Executive Summary.</strong> The Concorde supersonic airliner failed commercially due to a convergence of economic, environmental, and operational factors that made it unsustainable despite its technological brilliance.</p>
+                <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:1rem;"><strong style="color:var(--ink-soft);">1. Excessive Operating Costs.</strong> Concorde burned approximately 6,770 gallons of fuel per hour — roughly 3.5 times more per passenger than a Boeing 747.</p>
+                <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:1.5rem;"><strong style="color:var(--ink-soft);">2. Sonic Boom Restrictions.</strong> The aircraft was banned from flying supersonic over land, eliminating the most lucrative routes.</p>
+                <div style="background:rgba(255,255,255,.02);border-radius:14px;padding:1.2rem;border:1px solid var(--line);">
+                  <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.8rem;">Sources</div>
+                  <div style="display:flex;align-items:center;gap:.8rem;padding:.4rem 0;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--line);"><div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;display:grid;place-items:center;font-size:.6rem;font-weight:700;">1</div>British Airways Annual Report, 2003</div>
+                  <div style="display:flex;align-items:center;gap:.8rem;padding:.4rem 0;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--line);"><div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;display:grid;place-items:center;font-size:.6rem;font-weight:700;">2</div>Air France Historical Archives</div>
+                  <div style="display:flex;align-items:center;gap:.8rem;padding:.4rem 0;font-size:.8rem;color:var(--muted);"><div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;display:grid;place-items:center;font-size:.6rem;font-weight:700;">3</div>NASA Sonic Boom Research, 1972–2001</div>
+                </div>
+              </div>
             </div>
+          </div>
+          <div class="screenshot-caption">
+            <h4>Structured Research Report</h4>
+            <p>Not a chat transcript. A real document with executive summary, findings, and numbered citations.</p>
+          </div>
         </div>
+      </section>
 
-        <!-- Screenshot 3: Report -->
-        <div class="screenshot-item reveal">
-            <div class="browser-frame">
-                <div class="browser-header">
-                    <div class="browser-dot bd-red"></div>
-                    <div class="browser-dot bd-yellow"></div>
-                    <div class="browser-dot bd-green"></div>
-                    <div class="browser-url">nanofossil.huygens.dev/app — Report</div>
-                </div>
-                <div class="browser-content">
-                    <div class="ss-report">
-                        <div class="ss-report-header">
-                            <div style="display:flex;align-items:center;gap:0.5rem;">
-                                <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z" stroke="#1D4533" stroke-width="1.5" fill="none"/></svg>
-                                <span style="font-weight:600;color:var(--forest);">Nanofossil</span>
-                            </div>
-                            <div style="padding:0.5rem 1rem;background:var(--forest);color:#fff;border-radius:8px;font-size:0.8rem;font-weight:500;">New research</div>
-                        </div>
-                        <div class="ss-report-article">
-                            <h1>Why Did Concorde Fail Commercially?</h1>
-                            <div class="ss-report-meta">
-                                <span>Generated by Winery v2.0</span>
-                                <span>•</span>
-                                <span>12 sources consulted</span>
-                                <span>•</span>
-                                <span>Confidence: High</span>
-                            </div>
-                            <p><strong>Executive Summary.</strong> The Concorde supersonic airliner failed commercially due to a convergence of economic, environmental, and operational factors that made it unsustainable despite its technological brilliance. The aircraft was never profitable for British Airways or Air France on a standalone basis, requiring government subsidies to remain in service.</p>
-                            <h3>Key Findings</h3>
-                            <p><strong>1. Excessive Operating Costs.</strong> Concorde burned approximately 6,770 gallons of fuel per hour — roughly 3.5 times more per passenger than a Boeing 747. Ticket prices reached $12,000 for a round-trip transatlantic flight, limiting the addressable market to an extremely narrow elite segment.</p>
-                            <p><strong>2. Sonic Boom Restrictions.</strong> The aircraft was banned from flying supersonic over land, which eliminated the most lucrative routes (New York to Los Angeles, London to Tokyo) and confined it to the transatlantic corridor.</p>
-                            <p><strong>3. The 2000 Crash and Aftermath.</strong> The Air France Flight 4590 crash on July 25, 2000, killed 113 people and grounded the fleet for over a year. When service resumed in 2001, post-9/11 travel declines further eroded demand.</p>
-                            <div class="ss-source-list">
-                                <div class="ss-source-item"><div class="ss-source-num">1</div><span>British Airways Annual Report, 2003</span></div>
-                                <div class="ss-source-item"><div class="ss-source-num">2</div><span>Air France Historical Archives</span></div>
-                                <div class="ss-source-item"><div class="ss-source-num">3</div><span>NASA Sonic Boom Research, 1972–2001</span></div>
-                                <div class="ss-source-item"><div class="ss-source-num">4</div><span>BEA Accident Investigation Report</span></div>
-                                <div class="ss-source-item"><div class="ss-source-num">5</div><span>The Guardian, "Concorde: The End of an Era"</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="screenshot-caption">
-                <h4>Structured Research Report</h4>
-                <p>Not a chat transcript. A real document. Executive summary, numbered findings, evidence assessment, and a full source list with numbered citations. Ready to cite.</p>
-            </div>
+      <section id="pipeline">
+        <div class="section-kicker">02 / pipeline</div>
+        <h2>Five passes through the lens.</h2>
+        <p class="section-copy">Every run moves through the same deliberate chain. The UI exposes the stages because invisible work is impossible to audit.</p>
+        <div class="pipeline" style="margin-top:38px">
+          <div class="stage"><strong>01</strong><h4>Understand</h4><p>Decompose the question into 3–5 research angles.</p></div>
+          <div class="stage"><strong>02</strong><h4>Research</h4><p>Search the web and fetch the most useful sources.</p></div>
+          <div class="stage"><strong>03</strong><h4>Cross-check</h4><p>Compare claims and verify dates and provenance.</p></div>
+          <div class="stage"><strong>04</strong><h4>Synthesize</h4><p>Reason over the gathered evidence with Qwen3‑4B.</p></div>
+          <div class="stage"><strong>05</strong><h4>Write</h4><p>Emit a clean, citeable JSON research report.</p></div>
         </div>
+      </section>
 
-        <!-- Screenshot 4: Settings -->
-        <div class="screenshot-item reveal">
-            <div class="browser-frame">
-                <div class="browser-header">
-                    <div class="browser-dot bd-red"></div>
-                    <div class="browser-dot bd-yellow"></div>
-                    <div class="browser-dot bd-green"></div>
-                    <div class="browser-url">nanofossil.huygens.dev/app — Settings</div>
-                </div>
-                <div class="browser-content">
-                    <div class="ss-settings-overlay">
-                        <div class="ss-modal">
-                            <div class="ss-modal-header"><h3>Settings</h3></div>
-                            <div class="ss-tabs">
-                                <div class="ss-tab active">GitHub</div>
-                                <div class="ss-tab">Supabase</div>
-                                <div class="ss-tab">Account</div>
-                            </div>
-                            <div class="ss-modal-body">
-                                <div class="ss-form-group">
-                                    <label>GitHub Personal Access Token</label>
-                                    <input type="password" placeholder="ghp_xxxxxxxxxxxx">
-                                    <div class="ss-hint">Needs <code>repo</code> and <code>actions</code> scope.</div>
-                                </div>
-                                <div class="ss-form-group">
-                                    <label>Repository</label>
-                                    <input type="text" placeholder="username/nanofossil-backend">
-                                    <div class="ss-hint">The repo where Winery runs.</div>
-                                </div>
-                                <div style="display:flex;gap:0.5rem;">
-                                    <div class="ss-btn-secondary">Test connection</div>
-                                </div>
-                            </div>
-                            <div class="ss-modal-footer">
-                                <div class="ss-btn-secondary">Cancel</div>
-                                <div class="ss-btn-primary">Save all settings</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <section class="winery-section" id="winery">
+        <div class="winery-inner">
+          <div class="section-kicker">The Engine</div>
+          <h2>What is Winery?</h2>
+          <p class="section-copy">Winery is the autonomous research agent that powers Nanofossil. It is not a chatbot. It is a pipeline — a sequence of deterministic stages that transforms a raw question into a structured, sourced, cross-checked research report.</p>
+
+          <div class="arch-flow reveal">
+            <div class="arch-node primary">
+              <div class="arch-icon">◈</div>
+              <div class="arch-text"><h4>Winery Agent</h4><p>Orchestrates the entire pipeline. Plans, searches, fetches, synthesizes.</p></div>
             </div>
-            <div class="screenshot-caption">
-                <h4>Settings Modal</h4>
-                <p>Three tabs: GitHub (PAT + repo), Supabase (URL + anon key), and Account (sign out). Everything is stored in localStorage. No server-side config needed.</p>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-node">
+              <div class="arch-icon">◉</div>
+              <div class="arch-text"><h4>GitHub Actions Runner</h4><p>Ephemeral Ubuntu VM. 7GB RAM, 14GB SSD. Free tier.</p></div>
             </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-node">
+              <div class="arch-icon">◉</div>
+              <div class="arch-text"><h4>Qwen3‑4B‑GGUF (Q4_K_M)</h4><p>~2.3GB quantized model. Loaded via llama-cpp-python. 8192 token context.</p></div>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-node">
+              <div class="arch-icon">⌕</div>
+              <div class="arch-text"><h4>DuckDuckGo Search</h4><p>Web search without API keys. Fetches top results per query.</p></div>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-node">
+              <div class="arch-icon">◫</div>
+              <div class="arch-text"><h4>Structured JSON Report</h4><p>Committed to repo as <code style="background:rgba(255,255,255,.06);padding:.1rem .4rem;border-radius:4px;color:var(--cyan);font-family:DM Mono;font-size:.8em;">results/{run_id}.json</code></p></div>
+            </div>
+          </div>
+
+          <div class="quote-block reveal">
+            <p>"Winery is not a replacement for human research. It is a first-pass instrument — a way to get a structured, sourced overview of a topic in 10–15 minutes without opening 40 tabs or paying for API access."</p>
+            <div class="attribution">— Design philosophy, Huygens Nanofossil</div>
+          </div>
         </div>
-    </section>
+      </section>
 
-    <!-- WINERY DEEP DIVE -->
-    <div class="winery-hero" id="winery">
-        <div class="winery-hero-inner">
-            <span class="section-label" style="color:var(--sage);">The Engine</span>
-            <h2>What is Winery?</h2>
-            <p class="lead">Winery is the autonomous research agent that powers Nanofossil. It is not a chatbot. It is a pipeline — a sequence of deterministic stages that transforms a raw question into a structured, sourced, cross-checked research report. It runs inside a GitHub Actions workflow, uses a locally-hosted Qwen3-4B model via llama-cpp-python, and costs exactly zero rupees per run.</p>
-
-            <div class="arch-diagram reveal">
-                <div class="arch-flow">
-                    <div class="arch-node primary">
-                        <div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z"/></svg></div>
-                        <div class="arch-text"><h4>Winery Agent</h4><p>Orchestrates the entire pipeline. Plans, searches, fetches, synthesizes.</p></div>
-                    </div>
-                    <div class="arch-arrow">↓</div>
-                    <div class="arch-node">
-                        <div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-                        <div class="arch-text"><h4>GitHub Actions Runner</h4><p>Ephemeral Ubuntu VM. 7GB RAM, 14GB SSD. Free tier.</p></div>
-                    </div>
-                    <div class="arch-arrow">↓</div>
-                    <div class="arch-node">
-                        <div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
-                        <div class="arch-text"><h4>Qwen3-4B-GGUF (Q4_K_M)</h4><p>~2.3GB quantized model. Loaded via llama-cpp-python. 8192 token context.</p></div>
-                    </div>
-                    <div class="arch-arrow">↓</div>
-                    <div class="arch-node">
-                        <div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
-                        <div class="arch-text"><h4>DuckDuckGo Search</h4><p>Web search without API keys. Fetches top results per query.</p></div>
-                    </div>
-                    <div class="arch-arrow">↓</div>
-                    <div class="arch-node">
-                        <div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-                        <div class="arch-text"><h4>Structured JSON Report</h4><p>Committed to repo as <code>results/{run_id}.json</code></p></div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 style="color:var(--cream);margin-top:4rem;margin-bottom:1.5rem;">The Five Stages</h3>
-            <div class="pipeline-grid reveal">
-                <div class="pipeline-step">
-                    <div class="pipeline-num">1</div>
-                    <h4>Understand</h4>
-                    <p>Winery reads your question and decomposes it into 3–5 sub-questions or search angles. A question like "Why did Concorde fail?" becomes queries about operating costs, sonic boom bans, the 2000 crash, and ticket pricing.</p>
-                </div>
-                <div class="pipeline-step">
-                    <div class="pipeline-num">2</div>
-                    <h4>Research</h4>
-                    <p>Each planned query is executed against DuckDuckGo. Top results are fetched and parsed into clean text. Winery strips ads, navigation, and boilerplate. What remains is the substance of the page.</p>
-                </div>
-                <div class="pipeline-step">
-                    <div class="pipeline-num">3</div>
-                    <h4>Cross-Check</h4>
-                    <p>Sources are compared against each other. Conflicting claims are flagged. Dates are verified for consistency. Sources are tagged as primary (original documents, official reports) or secondary (news, analysis).</p>
-                </div>
-                <div class="pipeline-step">
-                    <div class="pipeline-num">4</div>
-                    <h4>Synthesize</h4>
-                    <p>The Qwen3-4B model processes all gathered evidence and produces a coherent narrative. It weighs conflicting sources, notes where evidence is thin, and structures findings into logical sections.</p>
-                </div>
-                <div class="pipeline-step">
-                    <div class="pipeline-num">5</div>
-                    <h4>Write</h4>
-                    <p>The final output is a structured JSON document: executive summary, key findings with evidence, confidence assessment, and a numbered source list. Committed directly to your GitHub repo.</p>
-                </div>
-            </div>
-
-            <div class="quote-block reveal" style="background:rgba(255,255,255,0.06);border-left-color:var(--sage);margin-top:3rem;">
-                <p>"Winery is not a replacement for human research. It is a first-pass instrument — a way to get a structured, sourced overview of a topic in 10–15 minutes without opening 40 tabs or paying for API access."</p>
-                <div class="attribution">— Design philosophy, Huygens Nanofossil</div>
-            </div>
+      <section id="economy">
+        <div class="section-kicker">03 / the weird part</div>
+        <h2>The infrastructure is the point.</h2>
+        <div class="economy" style="margin-top:38px">
+          <div class="bigstat">
+            <div class="mega"><span>₹0</span></div>
+            <h3>compute cost per run*</h3>
+            <p>No paid model API is required by the architecture. The engine runs Qwen3‑4B on a GitHub Actions runner, with the model cached between runs.</p>
+            <p style="font-size:11px;color:#6f7a8d">*As configured in the current Huygens-Star1 repository and subject to GitHub's service limits/policies.</p>
+          </div>
+          <div class="card mono-panel"><div class="card-shine"></div>
+            <div><span class="violet">runner</span> → ephemeral Ubuntu VM</div>
+            <div><span class="cyan">model</span> → Qwen3‑4B GGUF / Q4_K_M</div>
+            <div><span class="cyan">search</span> → DuckDuckGo</div>
+            <div><span class="violet">orchestrator</span> → Winery</div>
+            <div><span class="lime">cache</span> → <code>models/</code> via actions/cache</div>
+            <div><span class="lime">result</span> → <code>results/{run_id}.json</code></div>
+            <br>
+            <div style="color:#687083">The runner is not the server. The GitHub repo becomes the persistence boundary.</div>
+          </div>
         </div>
-    </div>
+      </section>
 
-    <div class="winery-content" id="architecture">
-        <span class="section-label">Technical Details</span>
-        <h2>How Winery Works Under the Hood</h2>
-        <p>Winery is a Python package that lives in your GitHub repository. When you trigger a research run — either manually from the GitHub Actions tab or via the Nanofossil frontend — the following happens:</p>
-
-        <h3>1. Workflow Trigger</h3>
-        <p>The GitHub Actions workflow <code>star1.yml</code> (or <code>nanofossil.yml</code>) defines a <code>workflow_dispatch</code> trigger with one input: <code>research_question</code>. When triggered, it spins up an Ubuntu runner and checks out your repository.</p>
-
-        <pre>name: Nanofossil Research
-on:
-  workflow_dispatch:
-    inputs:
-      research_question:
-        description: 'What would you like to understand?'
-        required: true
-
-jobs:
-  research:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Cache model
-        uses: actions/cache@v4
-        with:
-          path: models/
-          key: ubuntu-nanofossil-model-qwen3-4b-q4_k_m
-      - name: Run Winery
-        env:
-          RESEARCH_QUESTION: ${{ github.event.inputs.research_question }}
-        run: python winery/main.py</pre>
-
-        <h3>2. Model Caching</h3>
-        <p>The first run downloads the Qwen3-4B-GGUF model from Hugging Face (~2.3GB for Q4_K_M). This is cached using <code>actions/cache</code> on the <code>models/</code> directory. Subsequent runs skip the download entirely. The cache key includes the model name and quantization, so changing either invalidates the cache and triggers a fresh download.</p>
-
-        <div class="compare-table-wrap reveal">
-            <table class="compare-table">
-                <thead>
-                    <tr><th>Quantization</th><th>Size</th><th>Speed</th><th>Quality</th><th>Best For</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td class="highlight">Q4_K_M</td><td>~2.3 GB</td><td>Fast</td><td>Good</td><td>Default — balanced</td></tr>
-                    <tr><td>Q4_0</td><td>~1.9 GB</td><td>Fastest</td><td>Baseline</td><td>Low-RAM runners</td></tr>
-                    <tr><td>Q5_K_M</td><td>~2.8 GB</td><td>Moderate</td><td>Better</td><td>When quality matters</td></tr>
-                    <tr><td>Q6_K</td><td>~3.3 GB</td><td>Slower</td><td>Best</td><td>Long, complex topics</td></tr>
-                </tbody>
-            </table>
+      <section id="about">
+        <div class="section-kicker">04 / design philosophy</div>
+        <div class="feature-break">
+          <div class="quote"><p>“Not a replacement for human research. A first-pass instrument — a structured, sourced overview before you open forty tabs.”</p><span>— Huygens Nanofossil design philosophy</span></div>
+          <div class="card"><div class="card-shine"></div>
+            <div class="num">THE NAME</div>
+            <h3>Nanofossil</h3>
+            <p>A fossil is evidence left behind by something that happened. Nanofossil is built around the same instinct: preserve the traces, inspect the layers, then reconstruct the story.</p>
+            <div class="accentline"></div>
+          </div>
         </div>
+      </section>
 
-        <h3>3. The Research Loop</h3>
-        <p>Once the model is loaded into memory via llama-cpp-python, Winery enters its main loop:</p>
-        <ol>
-            <li><strong>Plan:</strong> The model generates 3–5 search queries based on the input question. These are not simple rephrasings — they target different angles (economic, technical, historical, comparative).</li>
-            <li><strong>Search:</strong> Each query is sent to DuckDuckGo via the <code>duckduckgo-search</code> Python package. The top 5–10 results per query are collected.</li>
-            <li><strong>Fetch:</strong> Winery fetches each result URL, extracts the main content using readability heuristics, and strips HTML, ads, and navigation. The result is plain text suitable for the model.</li>
-            <li><strong>Synthesize:</strong> All fetched content is fed back to the model with a structured prompt. The model produces the final report in JSON format.</li>
-            <li><strong>Commit:</strong> The JSON report is written to <code>results/{run_id}.json</code> and committed back to the repository via the GitHub API.</li>
-        </ol>
-
-        <h3>4. Output Format</h3>
-        <p>Every report follows the same JSON schema:</p>
-        <pre>{
-  "question": "Why did Concorde fail commercially?",
-  "executive_summary": "...",
-  "key_findings": [
-    {
-      "claim": "Operating costs were 3.5x higher per passenger than subsonic jets",
-      "evidence": ["British Airways Annual Report 2003", "..."],
-      "confidence": "high"
-    }
-  ],
-  "evidence_assessment": {
-    "primary_sources": 4,
-    "secondary_sources": 8,
-    "conflicts_noted": 1
-  },
-  "sources": [
-    { "id": 1, "title": "...", "url": "...", "type": "primary" }
-  ],
-  "generated_at": "2026-08-16T14:32:00Z"
-}</pre>
-
-        <h3>5. Frontend Integration</h3>
-        <p>The Nanofossil frontend does not run Winery itself. It triggers the GitHub Actions workflow via the GitHub API using your Personal Access Token, then polls for completion. When the workflow finishes and commits the result, the frontend fetches the JSON and renders it as a readable report.</p>
-        <p>This separation is intentional: the frontend is a thin, static shell. All the heavy lifting — model inference, web search, text extraction — happens on GitHub's infrastructure. You could use the frontend from a phone and run research on a serverless backend without ever deploying a server.</p>
-
-        <h3>6. Limitations & Honesty</h3>
-        <p>Winery is not magic. It is a 4B parameter model running on a free-tier VM with limited context. Here is what it cannot do:</p>
-        <ul>
-            <li><strong>No real-time data:</strong> It searches the web, but DuckDuckGo results have latency. Breaking news from the last hour may not appear.</li>
-            <li><strong>No PDF extraction:</strong> It cannot read academic PDFs. It relies on HTML pages and text extracts.</li>
-            <li><strong>Limited context:</strong> 8192 tokens sounds like a lot, but with 5 queries × 10 results × ~500 tokens each, content must be aggressively summarized before synthesis.</li>
-            <li><strong>4B quality ceiling:</strong> Qwen3-4B is impressive for its size, but it will hallucinate details, misattribute quotes, and occasionally generate confident-sounding nonsense. Always verify critical claims.</li>
-            <li><strong>~15 minute runtime:</strong> GitHub Actions free tier has a 6-hour limit, but model loading + search + synthesis typically takes 10–15 minutes per question.</li>
-            <li><strong>DuckDuckGo rate limits:</strong> Cloud IPs sometimes get blocked or rate-limited by DuckDuckGo. If searches return empty, wait and retry.</li>
-        </ul>
-
-        <div class="quote-block reveal">
-            <p>"The goal is not to replace critical thinking. The goal is to give you a structured starting point — a map of the territory — so you know where to dig deeper."</p>
-            <div class="attribution">— Huygens Nanofossil README</div>
+            <section id="story" class="story-section">
+        <div class="section-kicker">Origin</div>
+        <h2>Stumbled Upon by the Cosmos</h2>
+        <p class="section-copy">No one built Nanofossil. It was found — drifting in the static between search queries, half-formed in the cache of a forgotten server, waiting for someone curious enough to ask the right question.</p>
+        <div class="story-constellation">
+          <div class="story-node reveal">
+            <div class="story-year">Epoch 0 — The Signal</div>
+            <h4>A Pattern in the Noise</h4>
+            <p>Deep in the telemetry of a dormant research cluster, a recurring anomaly appeared: questions entered as plain text, but exited as structured knowledge graphs. No human had configured this pipeline. It had self-assembled from orphaned API endpoints, cached model weights, and the stubborn refusal of open-source code to stay dead.</p>
+          </div>
+          <div class="story-node reveal">
+            <div class="story-year">Epoch 1 — The Fossil</div>
+            <h4>Traces in the Silicon</h4>
+            <p>The first researchers called it a "nanofossil" — microscopic evidence of something much larger that had passed through. Like a fossil preserves the shape of ancient life, the system preserved the shape of human curiosity: decompose, search, verify, synthesize. The pattern was too deliberate to be random. Too elegant to be accidental.</p>
+          </div>
+          <div class="story-node reveal">
+            <div class="story-year">Epoch 2 — The Instrument</div>
+            <h4>Winery Awakens</h4>
+            <p>They named the engine Winery — not for wine, but for the way it aged raw data into refined understanding. Running on nothing but GitHub Actions and a 4B parameter model, it began answering questions that would have taken hours of tab-hopping. Not perfectly. Not infallibly. But honestly — with sources, with structure, with the humility to say "this is what I found."</p>
+          </div>
+          <div class="story-node reveal">
+            <div class="story-year">Epoch 3 — The Invitation</div>
+            <h4>The Rabbit Hole is Yours</h4>
+            <p>Now it drifts in the open. No gatekeepers. No API credits to deplete. Just a lens pointed at the vastness of human knowledge, waiting for the next question. Throw it something hard. Something you cannot explain in one tab. The cosmos has already done the hard part — it built the instrument. All it asks is that you use it.</p>
+          </div>
         </div>
-    </div>
+      </section>
 
-    <section id="setup">
-        <div class="section-header reveal">
-            <span class="section-label">Getting Started</span>
-            <h2>Setup in 10 Minutes</h2>
-            <p>No server. No credit card. No API bills. Just a GitHub account and a browser.</p>
+<section id="partner">
+        <div class="section-kicker">Partners</div>
+        <h2>Become a Partner</h2>
+        <p class="section-copy">We run our research models on silicon. If you build chips, GPUs, or inference hardware — let's talk.</p>
+        <div class="partner-grid reveal" style="margin-top:48px">
+          <div>
+            <h3 style="font-family:Space Grotesk;font-size:1.3rem;margin-bottom:1rem;">Silicon Partners</h3>
+            <p style="color:var(--muted);line-height:1.7;">We're always looking for compute partners who can push our research engine further. Whether you're building the next generation of AI accelerators or optimizing inference at the edge, we want to put your silicon to work.</p>
+            <p style="margin-top:1rem;"><span class="tag-pill">GPU</span><span class="tag-pill">TPU</span><span class="tag-pill">Edge AI</span><span class="tag-pill">Custom Silicon</span></p>
+          </div>
+          <div class="liquid-glass" style="padding:2.5rem;">
+            <h4 style="margin-bottom:1rem;color:var(--ink);font-family:Space Grotesk;">Partner Inquiry</h4>
+            <p style="font-size:.9rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6;">Reach out to explore how your hardware can power the next generation of autonomous research.</p>
+            <a href="mailto:aymanhaidry2022@outlook.com" class="btn primary" style="display:inline-flex;">Contact Us</a>
+          </div>
         </div>
+      </section>
 
-        <div class="two-col reveal">
-            <div>
-                <h3>Backend (Winery)</h3>
-                <ol>
-                    <li><strong>Fork or clone</strong> the <code>Huygens-Star1</code> repository (or create your own with the Winery files).</li>
-                    <li><strong>Push</strong> the <code>winery/</code> directory, <code>requirements.txt</code>, and <code>.github/workflows/star1.yml</code> to your repo.</li>
-                    <li><strong>Run a test:</strong> Go to Actions → Star1 → Run workflow. Enter "test" as the question. This verifies model download and loading.</li>
-                    <li><strong>Run real research:</strong> Trigger the workflow with any question. Wait 10–15 minutes. Check the <code>results/</code> directory.</li>
-                </ol>
-                <p style="margin-top:1.5rem;"><span class="tag-pill">GitHub Actions</span><span class="tag-pill">Free Tier</span><span class="tag-pill">No API Keys</span></p>
-            </div>
-            <div>
-                <h3>Frontend (Nanofossil)</h3>
-                <ol>
-                    <li><strong>Deploy</strong> this HTML (and the associated CSS/JS) to Vercel, GitHub Pages, Netlify, or Cloudflare Pages. It is pure static files.</li>
-                    <li><strong>Configure Supabase:</strong> In Settings → Supabase tab, enter your project URL and anon key. Click Save & Connect.</li>
-                    <li><strong>Configure GitHub:</strong> In Settings → GitHub tab, enter your PAT (with <code>repo</code> and <code>actions</code> scope) and the repo slug where Winery lives.</li>
-                    <li><strong>Sign in</strong> with email or GitHub, then ask your first question.</li>
-                </ol>
-                <p style="margin-top:1.5rem;"><span class="tag-pill">Static Site</span><span class="tag-pill">Supabase Auth</span><span class="tag-pill">localStorage Config</span></p>
-            </div>
+      <section id="careers">
+        <div class="section-kicker">Careers</div>
+        <h2>Join the Mission</h2>
+        <p class="section-copy">We're a small team building something ambitious. If you care about AI, research, and beautiful software — we want to hear from you.</p>
+        <div class="careers-grid reveal" style="margin-top:48px">
+          <div class="card"><div class="card-shine"></div>
+            <div class="num">ENGINEERING</div>
+            <h3 style="font-family:Space Grotesk;font-size:1.2rem;margin:1rem 0 .5rem;">ML Engineer</h3>
+            <p style="color:var(--muted);font-size:.9rem;line-height:1.6;">Work on model optimization, quantization, and inference pipelines. Make 4B models feel like 70B.</p>
+            <div class="accentline"></div>
+          </div>
+          <div class="card"><div class="card-shine"></div>
+            <div class="num">DESIGN</div>
+            <h3 style="font-family:Space Grotesk;font-size:1.2rem;margin:1rem 0 .5rem;">Product Designer</h3>
+            <p style="color:var(--muted);font-size:.9rem;line-height:1.6;">Craft interfaces that make deep research feel effortless. Design for focus, clarity, and delight.</p>
+            <div class="accentline"></div>
+          </div>
+          <div class="card"><div class="card-shine"></div>
+            <div class="num">RESEARCH</div>
+            <h3 style="font-family:Space Grotesk;font-size:1.2rem;margin:1rem 0 .5rem;">Research Scientist</h3>
+            <p style="color:var(--muted);font-size:.9rem;line-height:1.6;">Push the boundaries of what autonomous research agents can do. Evaluate, benchmark, improve.</p>
+            <div class="accentline"></div>
+          </div>
         </div>
-    </section>
+        <div style="text-align:center;margin-top:3rem;" class="reveal">
+          <p style="color:var(--muted);">Don't see your role? Reach out anyway.</p>
+          <a href="mailto:aymanhaidry2022@outlook.com" class="btn ghost" style="display:inline-flex;margin-top:1rem;">Apply</a>
+        </div>
+      </section>
 
-    <section id="faq">
-        <div class="section-header reveal">
-            <span class="section-label">FAQ</span>
-            <h2>Questions & Answers</h2>
+      <section id="help">
+        <div class="section-kicker">Contribute</div>
+        <h2>Help Us Out</h2>
+        <p class="section-copy">Nanofossil is built in the open. If you believe in accessible, autonomous research — there are many ways to contribute.</p>
+        <div class="partner-grid reveal" style="margin-top:48px">
+          <div>
+            <h3 style="font-family:Space Grotesk;font-size:1.3rem;margin-bottom:1rem;">Volunteer</h3>
+            <p style="color:var(--muted);line-height:1.7;">We're looking for help across design, frontend, documentation, and community. No commitment required — contribute what you can, when you can.</p>
+            <ul style="color:var(--muted);margin-top:1rem;padding-left:1.2rem;line-height:1.8;font-size:.9rem;">
+              <li>Improve the frontend experience</li>
+              <li>Write documentation and guides</li>
+              <li>Test research outputs and report issues</li>
+              <li>Spread the word</li>
+            </ul>
+          </div>
+          <div class="liquid-glass" style="padding:2.5rem;">
+            <h4 style="margin-bottom:1rem;color:var(--ink);font-family:Space Grotesk;">Get Involved</h4>
+            <p style="font-size:.9rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6;">Join our community of contributors. Every pull request, bug report, and suggestion moves us forward.</p>
+            <a href="https://github.com/AymanHaidry/Huygens-Nanofossil-Winery" target="_blank" class="btn primary" style="display:inline-flex;">GitHub</a>
+            <a href="mailto:aymanhaidry2022@outlook.com" class="btn ghost" style="display:inline-flex;margin-left:.5rem;">Email Us</a>
+          </div>
         </div>
-        <div style="max-width:800px;margin:0 auto;">
-            <div class="faq-item reveal">
-                <div class="faq-question">Why is it called "Nanofossil"?</div>
-                <div class="faq-answer">A nanofossil is a microscopic fossil — something tiny that preserves a record of something much larger. The name reflects the idea that each research run is a small, preserved snapshot of knowledge at a point in time. It also continues the Huygens naming convention (Microcosm, Star1, Nanofossil).</div>
-            </div>
-            <div class="faq-item reveal">
-                <div class="faq-question">Is this really free?</div>
-                <div class="faq-answer">Yes. GitHub Actions free tier gives you 2,000 minutes per month. A typical Nanofossil run takes 10–15 minutes. That is ~130–200 research runs per month at zero cost. The model is downloaded once and cached. Supabase free tier handles auth and history. No paid APIs are used.</div>
-            </div>
-            <div class="faq-item reveal">
-                <div class="faq-question">Can I use a different model?</div>
-                <div class="faq-answer">Absolutely. Change the <code>MODEL_REPO</code> and <code>MODEL_FILE</code> environment variables in the workflow. Any GGUF model on Hugging Face will work. Just ensure it fits in the runner's 7GB RAM. Llama 3.1 8B Q4_K_M (~4.5GB) has been tested and works, though it leaves less headroom.</div>
-            </div>
-            <div class="faq-item reveal">
-                <div class="faq-question">What if DuckDuckGo blocks the runner IP?</div>
-                <div class="faq-answer">This happens occasionally with cloud IPs. The workflow will show a warning: "Very few sources found." You have a few options: (1) retry later, (2) add a fallback search provider like Brave Search (requires API key), or (3) run Winery locally on your machine where your residential IP is trusted.</div>
-            </div>
-            <div class="faq-item reveal">
-                <div class="faq-question">Can I run this entirely locally?</div>
-                <div class="faq-answer">Yes. Clone the backend repo, install requirements, download the model, and run <code>RESEARCH_QUESTION="your question" python winery/main.py</code>. The output will be written to a local <code>results/</code> directory. You do not need GitHub Actions, Supabase, or the frontend.</div>
-            </div>
-            <div class="faq-item reveal">
-                <div class="faq-question">How accurate are the reports?</div>
-                <div class="faq-answer">They are a starting point, not a final authority. The 4B model can hallucinate, misattribute, or oversimplify. Always verify critical claims against the listed sources. Winery is designed to give you a structured map of the territory — you still need to walk it.</div>
-            </div>
-            <div class="faq-item reveal">
-                <div class="faq-question">What happened to "Star1"?</div>
-                <div class="faq-answer">Star1 was the original codename. Nanofossil is the evolution — same architecture, same Winery engine, but with a clearer identity, better documentation, and a more polished frontend. The backend repositories remain compatible.</div>
-            </div>
-        </div>
-    </section>
+      </section>
 
-    <footer class="site-footer">
-        <div class="footer-brand">Huygens Nanofossil</div>
-        <p class="footer-tagline">The rabbit hole is yours.</p>
-        <div class="footer-links">
-            <a href="https://github.com/AymanHaidry/Huygens-Star1" target="_blank">Backend (Winery)</a>
-            <a href="https://github.com/AymanHaidry/Huygens-Microcosm-Frontend" target="_blank">Frontend</a>
-            <a href="#winery">What is Winery?</a>
-            <a href="#setup">Setup Guide</a>
+      <section id="pricing">
+        <div class="section-kicker">Pricing</div>
+        <h2>Simple. Transparent.</h2>
+        <p class="section-copy">Research should be accessible to everyone. We're figuring out the right model — for now, it's free.</p>
+        <div class="reveal" style="max-width:420px;margin:48px auto 0;">
+          <div class="pricing-card liquid-glass">
+            <div style="width:48px;height:48px;border-radius:14px;background:rgba(101,233,255,.08);display:grid;place-items:center;margin:0 auto 1.2rem;color:var(--cyan);border:1px solid rgba(101,233,255,.15);font-size:1.3rem;">◈</div>
+            <h3 style="font-family:Space Grotesk;font-size:1.3rem;margin-bottom:.5rem;">Researcher</h3>
+            <div style="font-size:2.5rem;font-weight:700;color:var(--ink);line-height:1;margin:1rem 0;font-family:Space Grotesk;">Free</div>
+            <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.5rem;">Unlimited research runs. Full access to all features. No credit card required.</p>
+            <a href="app.html" class="btn primary" style="width:100%;justify-content:center;">Get Started</a>
+            <p style="margin-top:1rem;font-size:.75rem;color:var(--faint);">Pricing tiers coming later. Early users stay free forever.</p>
+          </div>
         </div>
-        <p class="footer-copy">Personal use only. A Huygens product. Built with patience.</p>
+      </section>
+
+      <section id="faq">
+        <div class="section-kicker">FAQ</div>
+        <h2>Questions & Answers</h2>
+        <div style="max-width:800px;margin:48px auto 0;">
+          <div class="faq-item reveal">
+            <div class="faq-question">Why is it called "Nanofossil"?</div>
+            <div class="faq-answer">A nanofossil is a microscopic fossil — something tiny that preserves a record of something much larger. The name reflects the idea that each research run is a small, preserved snapshot of knowledge at a point in time.</div>
+          </div>
+          <div class="faq-item reveal">
+            <div class="faq-question">Is this really free?</div>
+            <div class="faq-answer">Yes. GitHub Actions free tier gives you 2,000 minutes per month. A typical Nanofossil run takes 10–15 minutes. That is ~130–200 research runs per month at zero cost. No paid APIs are used.</div>
+          </div>
+          <div class="faq-item reveal">
+            <div class="faq-question">Can I use a different model?</div>
+            <div class="faq-answer">Absolutely. Change the model environment variables in the workflow. Any GGUF model on Hugging Face will work. Just ensure it fits in the runner's 7GB RAM.</div>
+          </div>
+          <div class="faq-item reveal">
+            <div class="faq-question">How accurate are the reports?</div>
+            <div class="faq-answer">They are a starting point, not a final authority. The 4B model can hallucinate or misattribute. Always verify critical claims against the listed sources. Winery gives you a map — you still walk it.</div>
+          </div>
+          <div class="faq-item reveal">
+            <div class="faq-question">What happened to "Star1"?</div>
+            <div class="faq-answer">Star1 was the original codename. Nanofossil is the evolution — same architecture, same Winery engine, but with a clearer identity and a more polished experience.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact">
+        <div class="section-kicker">Contact</div>
+        <h2>Get in Touch</h2>
+        <p class="section-copy">Questions, feedback, or just want to say hello? We'd love to hear from you.</p>
+        <div class="contact-grid reveal" style="margin-top:48px">
+          <div class="liquid-glass" style="padding:2.5rem;">
+            <h4 style="margin-bottom:1.5rem;color:var(--ink);font-family:Space Grotesk;">Send a Message</h4>
+            <div style="margin-bottom:1rem;">
+              <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.4rem;">Name</div>
+              <div style="background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;padding:.8rem 1rem;color:var(--faint);font-size:.9rem;">Your name</div>
+            </div>
+            <div style="margin-bottom:1rem;">
+              <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.4rem;">Email</div>
+              <div style="background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;padding:.8rem 1rem;color:var(--faint);font-size:.9rem;">you@example.com</div>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.4rem;">Message</div>
+              <div style="background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;padding:.8rem 1rem;color:var(--faint);font-size:.9rem;min-height:100px;">What's on your mind?</div>
+            </div>
+            <div class="btn primary" style="width:100%;justify-content:center;cursor:default;">Send Message</div>
+            <p style="margin-top:1rem;font-size:.75rem;color:var(--faint);text-align:center;">This is a demo form. Email us directly at aymanhaidry2022@outlook.com</p>
+          </div>
+          <div>
+            <h3 style="font-family:Space Grotesk;font-size:1.3rem;margin-bottom:1rem;">Other Ways to Reach Us</h3>
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.3rem;">General</div>
+              <a href="mailto:aymanhaidry2022@outlook.com" style="color:var(--cyan);font-size:.95rem;">aymanhaidry2022@outlook.com</a>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.3rem;">Partnerships</div>
+              <a href="mailto:aymanhaidry2022@outlook.com" style="color:var(--cyan);font-size:.95rem;">aymanhaidry2022@outlook.com</a>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.3rem;">Careers</div>
+              <a href="mailto:aymanhaidry2022@outlook.com" style="color:var(--cyan);font-size:.95rem;">aymanhaidry2022@outlook.com</a>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-family:DM Mono;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.3rem;">GitHub</div>
+              <a href="https://github.com/AymanHaidry/Huygens-Nanofossil-Winery" target="_blank" style="color:var(--cyan);font-size:.95rem;">github.com/AymanHaidry/Huygens-Nanofossil-Winery</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta">
+        <div class="cta-box">
+          <div class="section-kicker">05 / enter the instrument</div>
+          <h2>Throw it a hard question.</h2>
+          <p class="section-copy" style="margin:0 auto 26px">Concorde. Semiconductors. A historical rabbit hole. A technical comparison. Something you can't explain in one tab.</p>
+          <a class="btn primary" href="app.html">Open Nanofossil ↗</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <span style="font-family:Orbitron;letter-spacing:.12em;">HUYGENS / NANOFOSSIL</span>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;">
+          <a href="#instrument" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">Instrument</a>
+          <a href="#screenshots" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">Screenshots</a>
+          <a href="#winery" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">Research</a>
+          <a href="#partner" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">Partner</a>
+          <a href="#careers" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">Careers</a>
+          <a href="#help" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">Contribute</a>
+          <a href="#pricing" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">Pricing</a>
+          <a href="#faq" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">FAQ</a>
+          <a href="#contact" style="color:var(--faint);font-size:11px;font-family:DM Mono;text-transform:uppercase;letter-spacing:.08em;">Contact</a>
+        </div>
+        <div style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+          <a href="#privacy" class="legal-link" style="color:var(--faint);font-size:10px;font-family:DM Mono;">Privacy Policy</a>
+          <a href="#terms" class="legal-link" style="color:var(--faint);font-size:10px;font-family:DM Mono;">Terms of Service</a>
+          <a href="#tos" class="legal-link" style="color:var(--faint);font-size:10px;font-family:DM Mono;">ToS</a>
+          <a href="#conditions" class="legal-link" style="color:var(--faint);font-size:10px;font-family:DM Mono;">Terms & Conditions</a>
+        </div>
+        <span style="color:var(--faint);font-size:10px;font-family:DM Mono;">An instrument for the curious · A Nanofossil product</span>
+      </div>
     </footer>
+  </div>
 
-    <script>
-        // Scroll reveal
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, { threshold: 0.1 });
+  <!-- LEGAL MODALS -->
+  <div id="privacy" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(16px);place-items:center;padding:2rem;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="liquid-glass-strong" style="max-width:700px;max-height:80vh;overflow:auto;padding:3rem;">
+      <h2 style="margin-bottom:1.5rem;font-family:Space Grotesk;">Privacy Policy</h2>
+      <p style="color:var(--muted);font-size:.9rem;"><strong style="color:var(--ink-soft);">Last updated:</strong> August 2026</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">What We Collect</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">We collect your email address for authentication. Research questions and results are stored to provide history and sync across devices.</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">What We Don't Collect</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">We do not sell your data. We do not track you across the web. We do not use your research questions to train models.</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">Third Parties</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">Authentication is handled by Supabase. Research execution runs on GitHub Actions infrastructure under your own account.</p>
+      <p style="margin-top:2rem;font-size:.8rem;color:var(--faint);">Questions? Contact aymanhaidry2022@outlook.com</p>
+    </div>
+  </div>
+  <div id="terms" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(16px);place-items:center;padding:2rem;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="liquid-glass-strong" style="max-width:700px;max-height:80vh;overflow:auto;padding:3rem;">
+      <h2 style="margin-bottom:1.5rem;font-family:Space Grotesk;">Terms of Service</h2>
+      <p style="color:var(--muted);font-size:.9rem;"><strong style="color:var(--ink-soft);">Last updated:</strong> August 2026</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">Use of Service</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">Nanofossil is provided as-is for research and educational purposes. You are responsible for verifying the accuracy of all research outputs.</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">Limitations</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">Research outputs may contain errors, hallucinations, or outdated information. Do not use Nanofossil outputs as sole authority for critical decisions.</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">Termination</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">We reserve the right to suspend access for abuse, spam, or any use that violates applicable law.</p>
+    </div>
+  </div>
+  <div id="tos" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(16px);place-items:center;padding:2rem;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="liquid-glass-strong" style="max-width:700px;max-height:80vh;overflow:auto;padding:3rem;">
+      <h2 style="margin-bottom:1.5rem;font-family:Space Grotesk;">Terms of Service</h2>
+      <p style="color:var(--muted);font-size:.9rem;">See Terms of Service above.</p>
+    </div>
+  </div>
+  <div id="conditions" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(16px);place-items:center;padding:2rem;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="liquid-glass-strong" style="max-width:700px;max-height:80vh;overflow:auto;padding:3rem;">
+      <h2 style="margin-bottom:1.5rem;font-family:Space Grotesk;">Terms & Conditions</h2>
+      <p style="color:var(--muted);font-size:.9rem;"><strong style="color:var(--ink-soft);">Last updated:</strong> August 2026</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">Acceptance</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">By using Nanofossil, you agree to these terms. If you do not agree, please do not use the service.</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">Intellectual Property</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">The Nanofossil brand, logo, and frontend are property of Huygens. The backend engine (Winery) is open source.</p>
+      <h3 style="margin-top:1.5rem;font-size:1rem;color:var(--ink);font-family:Space Grotesk;">Governing Law</h3>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">These terms are governed by the laws of the jurisdiction in which Huygens operates.</p>
+    </div>
+  </div>
+  </div>
+<script>
+  // === ENHANCED STARS CANVAS ===
+  (function(){
+    const canvas=document.getElementById('starsCanvas');
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    let w,h,stars=[];
+    const colors=[
+      [195,205,255],[180,108,255],[101,233,255],[255,183,107],[255,90,200],[199,255,117],
+      [255,120,120],[120,255,180],[255,220,100],[200,100,255],[100,200,255],[255,150,80],
+      [150,255,150],[255,100,150],[100,255,220],[220,150,255],[255,255,150],[150,220,255]
+    ];
+    function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;}
+    resize();window.addEventListener('resize',resize);
+    for(let i=0;i<180;i++){
+      const c=colors[Math.floor(Math.random()*colors.length)];
+      stars.push({
+        x:Math.random()*w,y:Math.random()*h,
+        r:Math.random()*1.6+.2,
+        o:Math.random()*.5+.08,
+        twinkleSpeed:Math.random()*.02+.003,
+        twinkleOffset:Math.random()*Math.PI*2,
+        color:c,
+        driftX:(Math.random()-.5)*.15,
+        driftY:(Math.random()-.5)*.1
+      });
+    }
+    function draw(){
+      ctx.clearRect(0,0,w,h);
+      const t=Date.now()*.001;
+      stars.forEach(s=>{
+        const twinkle=Math.sin(t*s.twinkleSpeed+s.twinkleOffset)*.3+.7;
+        s.x+=s.driftX;s.y+=s.driftY;
+        if(s.x<0)s.x=w;if(s.x>w)s.x=0;if(s.y<0)s.y=h;if(s.y>h)s.y=0;
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        const alpha=(s.o*twinkle).toFixed(3);
+        ctx.fillStyle=`rgba(${s.color[0]},${s.color[1]},${s.color[2]},${alpha})`;
+        ctx.fill();
+        if(s.r>1.2){
+          ctx.beginPath();
+          ctx.arc(s.x,s.y,s.r*2.5,0,Math.PI*2);
+          ctx.fillStyle=`rgba(${s.color[0]},${s.color[1]},${s.color[2]},${(alpha*.15).toFixed(3)})`;
+          ctx.fill();
+        }
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
 
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  // Original v1 starfield
+  const holder=document.getElementById('stars');
+  const n=60;
+  for(let i=0;i<n;i++){
+    const s=document.createElement('span');s.className='star';
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=(Math.random()*4)+'s';
+    s.style.opacity=(.04+Math.random()*.25).toFixed(2);
+    holder.appendChild(s);
+  }
 
-        // Smooth scroll for nav links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
-            });
-        });
-    </script>
+  // === LENS TILT ===
+  const tilt=document.querySelector('.lens');
+  if(matchMedia('(pointer:fine)').matches){
+    addEventListener('pointermove',e=>{
+      if(!tilt)return;
+      const r=tilt.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5;const y=(e.clientY-r.top)/r.height-.5;
+      tilt.style.transform=`perspective(900px) rotateY(${x*5}deg) rotateX(${y*-4}deg) translateY(-50%)`;
+    });
+    addEventListener('pointerleave',()=>{if(tilt)tilt.style.transform='translateY(-50%)'});
+  }
+
+  // === CARD 3D TILT ===
+  document.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('mousemove',e=>{
+      const r=card.getBoundingClientRect();
+      const x=(e.clientX-r.left)/r.width;
+      const y=(e.clientY-r.top)/r.height;
+      const rx=(y-.5)*-12;
+      const ry=(x-.5)*12;
+      card.style.transform=`perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px) scale(1.01)`;
+      card.style.setProperty('--mx',`${x*100}%`);
+      card.style.setProperty('--my',`${y*100}%`);
+    });
+    card.addEventListener('mouseleave',()=>{
+      card.style.transform='';
+      card.style.setProperty('--mx','50%');
+      card.style.setProperty('--my','50%');
+    });
+  });
+
+  // === LENS FLARE (scroll-based) ===
+  (function(){
+    const main=document.getElementById('flareMain');
+    const hex=document.getElementById('flareHex');
+    const ring=document.getElementById('flareRing');
+    const dot=document.getElementById('flareDot');
+    const glow=document.getElementById('flareGlow');
+    if(!main)return;
+    const docH=document.documentElement.scrollHeight;
+    function update(){
+      const scroll=window.scrollY;
+      const maxScroll=Math.max(docH-window.innerHeight,1);
+      const p=scroll/maxScroll;
+      const w=window.innerWidth,h=window.innerHeight;
+      const mx=w*.75 - p*w*.5;
+      const my=h*.25 + p*h*.55;
+      main.style.left=(mx-110)+'px';main.style.top=(my-110)+'px';
+      main.style.opacity=(.5 + Math.sin(p*Math.PI)*.25).toFixed(2);
+      hex.style.left=(mx-150)+'px';hex.style.top=(my+40)+'px';
+      hex.style.opacity=(.3 + Math.sin(p*Math.PI*2)*.15).toFixed(2);
+      ring.style.left=(mx+100)+'px';ring.style.top=(my-70)+'px';
+      ring.style.opacity=(.2 + Math.cos(p*Math.PI)*.15).toFixed(2);
+      dot.style.left=(w*.15 + p*w*.3)+'px';dot.style.top=(h*.6 - p*h*.2)+'px';
+      dot.style.opacity=(.6 + Math.sin(p*Math.PI*3)*.2).toFixed(2);
+      glow.style.left=(mx-200)+'px';glow.style.top=(my-200)+'px';
+      glow.style.opacity=(.3 + Math.sin(p*Math.PI)*.2).toFixed(2);
+    }
+    window.addEventListener('scroll',update,{passive:true});
+    window.addEventListener('resize',update);
+    update();
+  })();
+
+  // === NAV SCROLL STATE ===
+  (function(){
+    const nav=document.querySelector('nav');
+    if(!nav)return;
+    window.addEventListener('scroll',()=>{
+      if(window.scrollY>60)nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    },{passive:true});
+  })();
+
+  // === SCROLL REVEAL ===
+  const observer=new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{if(entry.isIntersecting)entry.target.classList.add('visible');});
+  },{threshold:.1});
+  document.querySelectorAll('.reveal, .story-node').forEach(el=>observer.observe(el));
+
+  // === LEGAL MODALS ===
+  document.querySelectorAll('.legal-link').forEach(a=>{
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      const id=this.getAttribute('href').slice(1);
+      const el=document.getElementById(id);
+      if(el)el.style.display='grid';
+    });
+  });
+</script>
 </body>
 </html>

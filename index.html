@@ -68,7 +68,7 @@
     .microline{display:flex;gap:15px;flex-wrap:wrap;color:#7d879a;font-family:"DM Mono";font-size:11px}
     .microline span{padding-right:15px;border-right:1px solid var(--line)}
     .microline span:last-child{border:0}
-    .lens{position:absolute;right:24px;top:65%;transform:translateY(-50%);aspect-ratio:9/16;max-height:640px;max-width:380px;width:100%;border:1px solid var(--line);border-radius:32px;background:linear-gradient(150deg,rgba(255,255,255,.04),rgba(255,255,255,.01));overflow:hidden;box-shadow:var(--glow);z-index:0}
+    .lens{position:absolute;right:24px;top:72%;transform:translateY(-50%);aspect-ratio:9/16;max-height:640px;max-width:380px;width:100%;border:1px solid var(--line);border-radius:32px;background:linear-gradient(150deg,rgba(255,255,255,.04),rgba(255,255,255,.01));overflow:hidden;box-shadow:var(--glow);z-index:0}
     .lens:before{content:"";position:absolute;inset:-20%;background:conic-gradient(from 0deg,transparent 0 22%,rgba(101,233,255,.18),transparent 35%,rgba(255,90,200,.14),transparent 55%,rgba(123,124,255,.2),transparent 73%);filter:blur(30px);animation:spin 18s linear infinite}
     @keyframes spin{to{transform:rotate(1turn)}}
     .lens-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(101,233,255,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(180,108,255,.08) 1px,transparent 1px);background-size:42px 42px;transform:perspective(800px) rotateX(58deg) scale(1.35);transform-origin:center bottom;opacity:.35}
@@ -118,19 +118,19 @@
     /* === COSMIC EFFECTS === */
 .galaxy{position:fixed;width:900px;height:900px;border-radius:50%;pointer-events:none;z-index:0;opacity:.18;
   background:conic-gradient(from 0deg,transparent 0deg,rgba(180,108,255,.22) 50deg,transparent 110deg,rgba(255,183,107,.16) 170deg,transparent 230deg,rgba(101,233,255,.18) 290deg,transparent 350deg);
-  filter:blur(55px);top:-220px;right:-280px;animation:galaxySpin 40s linear infinite}
-.galaxy:nth-child(2){width:600px;height:600px;bottom:-120px;left:-180px;top:auto;right:auto;opacity:.14;animation:galaxySpin 60s linear infinite reverse;background:conic-gradient(from 180deg,transparent 0deg,rgba(255,183,107,.20) 60deg,transparent 130deg,rgba(180,108,255,.14) 200deg,transparent 270deg)}
+  filter:blur(55px);top:-220px;right:-280px;animation:galaxySpin 20s linear infinite}
+.galaxy:nth-child(2){width:600px;height:600px;bottom:-120px;left:-180px;top:auto;right:auto;opacity:.14;animation:galaxySpin 30s linear infinite reverse;background:conic-gradient(from 180deg,transparent 0deg,rgba(255,183,107,.20) 60deg,transparent 130deg,rgba(180,108,255,.14) 200deg,transparent 270deg)}
 @keyframes galaxySpin{to{transform:rotate(360deg)}}
 .blackhole{position:fixed;width:400px;height:400px;border-radius:50%;pointer-events:none;z-index:0;opacity:.30;
   background:radial-gradient(circle at 50% 50%,#000 0%,#000 18%,rgba(180,108,255,.14) 28%,rgba(255,183,107,.10) 42%,rgba(101,233,255,.06) 58%,transparent 75%);
-  filter:blur(3px);bottom:3%;left:-140px;animation:bhPulse 6s ease-in-out infinite}
-.blackhole::before{content:'';position:absolute;inset:-40px;border-radius:50%;border:1px solid rgba(180,108,255,.08);animation:bhRing 10s linear infinite}
-.blackhole::after{content:'';position:absolute;inset:-80px;border-radius:50%;border:1px solid rgba(255,183,107,.05);animation:bhRing 15s linear infinite reverse}
+  filter:blur(3px);bottom:3%;left:-140px;animation:bhPulse 3s ease-in-out infinite}
+.blackhole::before{content:'';position:absolute;inset:-40px;border-radius:50%;border:1px solid rgba(180,108,255,.08);animation:bhRing 5s linear infinite}
+.blackhole::after{content:'';position:absolute;inset:-80px;border-radius:50%;border:1px solid rgba(255,183,107,.05);animation:bhRing 7s linear infinite reverse}
 @keyframes bhPulse{0%,100%{transform:scale(1);opacity:.20}50%{transform:scale(1.15);opacity:.35}}
 @keyframes bhRing{to{transform:rotate(360deg)}}
 .nebula{position:fixed;width:600px;height:600px;border-radius:50%;pointer-events:none;z-index:0;opacity:.12;
   background:radial-gradient(circle at 40% 40%,rgba(180,108,255,.35),rgba(140,60,220,.15),transparent 50%),radial-gradient(circle at 60% 60%,rgba(255,183,107,.25),rgba(220,150,60,.12),transparent 45%),radial-gradient(circle at 50% 50%,rgba(101,233,255,.12),transparent 55%);
-  filter:blur(70px);top:30%;left:50%;transform:translate(-50%,-50%);animation:nebulaDrift 20s ease-in-out infinite alternate}
+  filter:blur(70px);top:30%;left:50%;transform:translate(-50%,-50%);animation:nebulaDrift 10s ease-in-out infinite alternate}
 @keyframes nebulaDrift{0%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-45%,-55%) scale(1.15)}}
 .meteor{position:fixed;width:3px;height:3px;background:#fff;border-radius:50%;pointer-events:none;z-index:0;opacity:0;box-shadow:0 0 6px rgba(255,255,255,.8),0 0 12px rgba(180,108,255,.4)}
 .meteor::after{content:'';position:absolute;top:0;left:0;width:160px;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(180,108,255,.4),rgba(255,183,107,.2),transparent);transform:rotate(-45deg);transform-origin:0 0;filter:blur(.5px)}
@@ -218,11 +218,11 @@
 
 /* === AMBIENT ORBS === */
 .ambient-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(80px);mix-blend-mode:screen}
-.ambient-orb.purple{width:550px;height:550px;background:radial-gradient(circle,rgba(180,108,255,.35),rgba(140,60,220,.15),transparent 55%);top:8%;right:-5%;animation:orbDrift1 25s ease-in-out infinite alternate}
-.ambient-orb.gold{width:500px;height:500px;background:radial-gradient(circle,rgba(255,183,107,.28),rgba(220,150,60,.12),transparent 50%);bottom:5%;left:-8%;animation:orbDrift2 30s ease-in-out infinite alternate}
-.ambient-orb.cyan{width:400px;height:400px;background:radial-gradient(circle,rgba(101,233,255,.20),rgba(60,180,220,.10),transparent 50%);top:75%;right:15%;animation:orbDrift3 20s ease-in-out infinite alternate}
-.ambient-orb.magenta{width:350px;height:350px;background:radial-gradient(circle,rgba(255,90,200,.18),rgba(200,60,160,.08),transparent 55%);top:45%;left:-6%;animation:orbDrift1 28s ease-in-out infinite alternate reverse}
-.ambient-orb.lime{width:300px;height:300px;background:radial-gradient(circle,rgba(199,255,117,.15),rgba(140,220,80,.08),transparent 55%);top:20%;left:60%;animation:orbDrift2 22s ease-in-out infinite alternate reverse}
+.ambient-orb.purple{width:550px;height:550px;background:radial-gradient(circle,rgba(180,108,255,.35),rgba(140,60,220,.15),transparent 55%);top:12%;right:3%;animation:orbDrift1 12s ease-in-out infinite alternate}
+.ambient-orb.gold{width:500px;height:500px;background:radial-gradient(circle,rgba(255,183,107,.28),rgba(220,150,60,.12),transparent 50%);bottom:18%;left:8%;animation:orbDrift2 15s ease-in-out infinite alternate}
+.ambient-orb.cyan{width:400px;height:400px;background:radial-gradient(circle,rgba(101,233,255,.20),rgba(60,180,220,.10),transparent 50%);top:52%;right:22%;animation:orbDrift3 10s ease-in-out infinite alternate}
+.ambient-orb.magenta{width:350px;height:350px;background:radial-gradient(circle,rgba(255,90,200,.18),rgba(200,60,160,.08),transparent 55%);top:70%;left:30%;animation:orbDrift1 14s ease-in-out infinite alternate reverse}
+.ambient-orb.lime{width:300px;height:300px;background:radial-gradient(circle,rgba(199,255,117,.15),rgba(140,220,80,.08),transparent 55%);top:35%;left:5%;animation:orbDrift2 11s ease-in-out infinite alternate reverse}
 @keyframes orbDrift1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,-30px) scale(1.2)}}
 @keyframes orbDrift2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-30px,20px) scale(1.15)}}
 @keyframes orbDrift3{0%{transform:translate(0,0) scale(1)}100%{transform:translate(20px,40px) scale(1.1)}}
@@ -291,8 +291,8 @@
 
     nav.scrolled{background:rgba(5,6,10,.65);border-color:rgba(180,108,255,.12);box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.10),0 0 30px rgba(180,108,255,.05)}
     nav.scrolled::after{opacity:.7}
-    @media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:80px}.lens{right:50%;top:55%;transform:translate(50%,-50%);opacity:.15;max-height:520px;max-width:320px;pointer-events:none}.lens-core{width:55%}.navlinks{display:none}.feature-grid,.economy,.feature-break{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr 1fr}}
-    @media(max-width:560px){.hero{padding-left:18px;padding-right:18px}.hero p{font-size:16px}.lens{aspect-ratio:3/4;max-height:420px;opacity:.12}.scanline{animation:none;opacity:.6;top:35%}.telemetry{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr}section{padding:75px 18px}}
+    @media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:100px}.lens{right:50%;top:68%;transform:translate(50%,-50%);opacity:.12;max-height:480px;max-width:300px;pointer-events:none}.lens-core{width:55%}.navlinks{display:none}.feature-grid,.economy,.feature-break,.partner-grid,.contact-grid{grid-template-columns:1fr}.careers-grid{grid-template-columns:1fr 1fr}.pipeline{grid-template-columns:1fr 1fr}nav{width:calc(100% - 24px);top:10px}.nav{height:54px;padding:0 16px}.brand span{font-size:13px}.btn.primary{padding:9px 14px;font-size:13px}}
+    @media(max-width:560px){.hero{padding-left:16px;padding-right:16px;padding-top:90px}.hero p{font-size:15px}.lens{display:none}.scanline{animation:none;opacity:.6;top:35%}.telemetry{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr}section{padding:60px 16px}nav{border-radius:20px;top:8px;width:calc(100% - 16px)}.nav{height:48px;padding:0 12px}.brand span{font-size:11px;letter-spacing:.06em}.brand img{width:24px;height:24px}.btn.primary{padding:8px 12px;font-size:12px}.hero-tagline{font-size:11px;letter-spacing:.18em}.hero-actions{gap:8px;margin:20px 0}.hero-actions .btn{padding:10px 14px;font-size:13px}.contact-grid,.partner-grid,.economy,.feature-break,.careers-grid{grid-template-columns:1fr!important;gap:1.5rem}.contact-grid .liquid-glass{padding:1.5rem}}
   </style>
 </head>
 <body>

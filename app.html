@@ -1,270 +1,1796 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nanofossil — Research anything.</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#05060a">
+  <title>Nanofossil — Research Instrument</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Elms+Sans:wght@400;500&family=Inter:wght@400;500;600&family=Playwrite+BR&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#05060a; --bg2:#090b12; --panel:rgba(13,16,27,.72);
+      --ink:#f4f7ff; --muted:#a7afc1; --faint:#687083; --line:rgba(255,255,255,.09);
+      --cyan:#65e9ff; --blue:#7b7cff; --violet:#b46cff; --magenta:#ff5ac8;
+      --lime:#c7ff75; --hot:#ffb76b; --red:#ff718a;
+      --glow:0 0 80px rgba(101,233,255,.11),0 0 180px rgba(180,108,255,.07);
+      --max:1240px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:
+      radial-gradient(circle at 15% 15%,rgba(123,124,255,.11),transparent 26%),
+      radial-gradient(circle at 85% 9%,rgba(101,233,255,.08),transparent 24%),
+      radial-gradient(circle at 50% 70%,rgba(180,108,255,.06),transparent 30%),var(--bg);
+      color:var(--ink);font-family:"Elms Sans",system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.12;
+      background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+      background-size:64px 64px;mask-image:linear-gradient(to bottom,black 0%,transparent 95%)}
+    button,input,textarea,select{font:inherit}button{cursor:pointer}
+    a{color:inherit;text-decoration:none}
+
+    .stars{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+    .star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:.35;animation:twinkle 4s ease-in-out infinite}
+    @keyframes twinkle{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.9;transform:scale(1.4)}}
+    .orb{position:absolute;border-radius:50%;filter:blur(1px);mix-blend-mode:screen}
+    .orb.a{width:420px;height:420px;left:-180px;top:430px;background:radial-gradient(circle,rgba(101,233,255,.15),transparent 68%)}
+    .orb.b{width:560px;height:560px;right:-250px;top:800px;background:radial-gradient(circle,rgba(255,90,200,.12),transparent 68%)}
+    
+    /* ===== COSMIC EFFECTS ===== */
+.galaxy{position:fixed;width:900px;height:900px;border-radius:50%;pointer-events:none;z-index:0;opacity:.18;
+  background:conic-gradient(from 0deg,transparent 0deg,rgba(180,108,255,.22) 50deg,transparent 110deg,rgba(255,183,107,.16) 170deg,transparent 230deg,rgba(101,233,255,.18) 290deg,transparent 350deg);
+  filter:blur(55px);top:-220px;right:-280px;animation:galaxySpin 40s linear infinite}
+.galaxy:nth-child(2){width:600px;height:600px;bottom:-120px;left:-180px;top:auto;right:auto;opacity:.14;animation:galaxySpin 60s linear infinite reverse;background:conic-gradient(from 180deg,transparent 0deg,rgba(255,183,107,.20) 60deg,transparent 130deg,rgba(180,108,255,.14) 200deg,transparent 270deg)}
+@keyframes galaxySpin{to{transform:rotate(360deg)}}
+.blackhole{position:fixed;width:400px;height:400px;border-radius:50%;pointer-events:none;z-index:0;opacity:.30;
+  background:radial-gradient(circle at 50% 50%,#000 0%,#000 18%,rgba(180,108,255,.14) 28%,rgba(255,183,107,.10) 42%,rgba(101,233,255,.06) 58%,transparent 75%);
+  filter:blur(3px);bottom:3%;left:-140px;animation:bhPulse 6s ease-in-out infinite}
+.blackhole::before{content:'';position:absolute;inset:-40px;border-radius:50%;border:1px solid rgba(180,108,255,.08);animation:bhRing 10s linear infinite}
+.blackhole::after{content:'';position:absolute;inset:-80px;border-radius:50%;border:1px solid rgba(255,183,107,.05);animation:bhRing 15s linear infinite reverse}
+@keyframes bhPulse{0%,100%{transform:scale(1);opacity:.20}50%{transform:scale(1.15);opacity:.35}}
+@keyframes bhRing{to{transform:rotate(360deg)}}
+.nebula{position:fixed;width:600px;height:600px;border-radius:50%;pointer-events:none;z-index:0;opacity:.12;
+  background:radial-gradient(circle at 40% 40%,rgba(180,108,255,.35),rgba(140,60,220,.15),transparent 50%),radial-gradient(circle at 60% 60%,rgba(255,183,107,.25),rgba(220,150,60,.12),transparent 45%),radial-gradient(circle at 50% 50%,rgba(101,233,255,.12),transparent 55%);
+  filter:blur(70px);top:30%;left:50%;transform:translate(-50%,-50%);animation:nebulaDrift 20s ease-in-out infinite alternate}
+@keyframes nebulaDrift{0%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-45%,-55%) scale(1.15)}}
+.meteor{position:fixed;width:3px;height:3px;background:#fff;border-radius:50%;pointer-events:none;z-index:0;opacity:0;box-shadow:0 0 6px rgba(255,255,255,.8),0 0 12px rgba(180,108,255,.4);--angle:-45deg}
+.meteor::after{content:'';position:absolute;top:0;left:0;width:260px;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(180,108,255,.4),rgba(255,183,107,.2),transparent);transform:rotate(var(--angle));transform-origin:0 0;filter:blur(.5px)}
+@keyframes meteorFall{0%{opacity:0;transform:translate(0,0) scale(.5)}6%{opacity:1;transform:translate(0,0) scale(1)}94%{opacity:1}100%{opacity:0;transform:translate(-900px,900px) scale(.6)}}
+.stars-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+/* ===== MILKY WAY ===== */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #010205;
+}
+
+body {
+    position: relative;
+    min-height: 100vh;
+}
+
+/* =========================================================
+   DEEP SPACE
+   ========================================================= */
+
+.mw-space{position:fixed;inset:0;z-index:0;opacity:.32;overflow:hidden;pointer-events:none;
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(
+            ellipse at 50% 48%,
+            #111827 0%,
+            #080c16 30%,
+            #03050b 65%,
+            #010205 100%
+        );
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   STAR LAYERS
+   ========================================================= */
+
+.mw-stars,
+.mw-stars::before,
+.mw-stars::after {
+    position: absolute;
+    inset: -20%;
+    content: "";
+    pointer-events: none;
+}
+
+.mw-stars {
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,.95) 0 1px, transparent 1.4px),
+        radial-gradient(circle, rgba(255,255,255,.72) 0 .8px, transparent 1.2px),
+        radial-gradient(circle, rgba(210,225,255,.75) 0 .7px, transparent 1.1px);
+
+    background-size:
+        83px 97px,
+        137px 149px,
+        61px 73px;
+
+    background-position:
+        17px 29px,
+        43px 11px,
+        7px 51px;
+
+    opacity: .75;
+}
+
+.mw-stars::before {
+    background-image:
+        radial-gradient(circle, white 0 1.2px, transparent 1.7px),
+        radial-gradient(circle, rgba(255,230,190,.9) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(180,210,255,.8) 0 .8px, transparent 1.3px);
+
+    background-size:
+        191px 223px,
+        271px 241px,
+        157px 181px;
+
+    background-position:
+        31px 73px,
+        91px 41px,
+        67px 113px;
+
+    opacity: .8;
+    transform: rotate(3deg);
+}
+
+.mw-stars::after {
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,.8) 0 1.5px, transparent 2px),
+        radial-gradient(circle, rgba(255,240,210,.7) 0 1.2px, transparent 1.8px);
+
+    background-size:
+        337px 311px,
+        421px 383px;
+
+    background-position:
+        101px 37px,
+        71px 139px;
+
+    opacity: .5;
+}
+
+
+/* =========================================================
+   MILKY WAY MAIN BAND
+   ========================================================= */
+
+.mw-galaxy {
+    position: absolute;
+
+    width: 170%;
+    height: 58%;
+
+    left: -35%;
+    top: 21%;
+
+    transform: rotate(-14deg);
+
+    border-radius: 50%;
+
+    background:
+        /* central glow */
+        radial-gradient(
+            ellipse at 50% 50%,
+            rgba(255,236,199,.95) 0%,
+            rgba(255,215,166,.78) 5%,
+            rgba(226,173,131,.48) 14%,
+            rgba(147,131,151,.28) 27%,
+            rgba(78,88,120,.18) 42%,
+            transparent 68%
+        ),
+
+        /* outer blue-white haze */
+        radial-gradient(
+            ellipse at 50% 50%,
+            rgba(175,195,230,.34) 0%,
+            rgba(100,125,174,.22) 27%,
+            rgba(47,65,105,.14) 48%,
+            transparent 72%
+        );
+
+    filter: blur(13px);
+
+    opacity: .9;
+}
+
+
+/* =========================================================
+   DUST LANES
+   ========================================================= */
+
+.mw-dust {
+    position: absolute;
+
+    width: 180%;
+    height: 34%;
+
+    left: -40%;
+    top: 33%;
+
+    transform: rotate(-14deg);
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            167deg,
+            transparent 0%,
+            transparent 16%,
+
+            rgba(0,0,0,.25) 23%,
+            rgba(0,0,0,.42) 27%,
+            transparent 31%,
+
+            transparent 39%,
+
+            rgba(0,0,0,.28) 44%,
+            rgba(0,0,0,.48) 48%,
+            transparent 53%,
+
+            transparent 61%,
+
+            rgba(0,0,0,.3) 67%,
+            rgba(0,0,0,.52) 71%,
+            transparent 76%,
+
+            transparent 100%
+        );
+
+    filter: blur(8px);
+
+    opacity: .9;
+}
+
+
+/* =========================================================
+   GALACTIC CORE
+   ========================================================= */
+
+.mw-core {
+    position: absolute;
+
+    width: 48%;
+    height: 32%;
+
+    left: 26%;
+    top: 34%;
+
+    transform: rotate(-14deg);
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            ellipse,
+            rgba(255,247,224,1) 0%,
+            rgba(255,226,178,.9) 8%,
+            rgba(255,193,135,.55) 20%,
+            rgba(205,154,130,.22) 38%,
+            transparent 67%
+        );
+
+    filter: blur(9px);
+
+    mix-blend-mode: screen;
+}
+
+
+/* =========================================================
+   DENSE STAR CLOUD
+   ========================================================= */
+
+.mw-star-cloud {
+    position: absolute;
+
+    width: 170%;
+    height: 42%;
+
+    left: -35%;
+    top: 29%;
+
+    transform: rotate(-14deg);
+
+    border-radius: 50%;
+
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,.9) 0 .7px, transparent 1px),
+        radial-gradient(circle, rgba(255,239,211,.8) 0 .8px, transparent 1.2px),
+        radial-gradient(circle, rgba(200,220,255,.8) 0 .6px, transparent 1px);
+
+    background-size:
+        31px 37px,
+        47px 53px,
+        67px 71px;
+
+    background-position:
+        11px 17px,
+        29px 41px,
+        7px 31px;
+
+    opacity: .6;
+
+    mask-image:
+        radial-gradient(
+            ellipse,
+            black 0%,
+            black 38%,
+            transparent 72%
+        );
+
+    -webkit-mask-image:
+        radial-gradient(
+            ellipse,
+            black 0%,
+            black 38%,
+            transparent 72%
+        );
+}
+
+
+/* =========================================================
+   NEBULA PATCHES
+   ========================================================= */
+
+.mw-nebula {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(35px);
+    mix-blend-mode: screen;
+    opacity: .25;
+}
+
+.mw-nebula.one {
+    width: 32%;
+    height: 14%;
+    left: 8%;
+    top: 42%;
+
+    background:
+        radial-gradient(
+            ellipse,
+            rgba(120,155,210,.7),
+            transparent 70%
+        );
+
+    transform: rotate(-15deg);
+}
+
+.mw-nebula.two {
+    width: 27%;
+    height: 12%;
+    right: 7%;
+    top: 31%;
+
+    background:
+        radial-gradient(
+            ellipse,
+            rgba(170,120,150,.55),
+            transparent 70%
+        );
+
+    transform: rotate(-15deg);
+}
+
+.mw-nebula.three {
+    width: 24%;
+    height: 11%;
+    left: 41%;
+    top: 58%;
+
+    background:
+        radial-gradient(
+            ellipse,
+            rgba(220,150,105,.5),
+            transparent 70%
+        );
+
+    transform: rotate(-15deg);
+}
+
+
+/* =========================================================
+   VIGNETTE
+   ========================================================= */
+
+.mw-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 35%,
+            rgba(0,0,0,.28) 68%,
+            rgba(0,0,0,.72) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   SUBTLE MOTION
+   ========================================================= */
+
+.mw-galaxy,
+.mw-star-cloud,
+.mw-dust {
+    animation: mw-drift 80s linear infinite alternate;
+}
+
+@keyframes mw-drift {
+    from {
+        transform: rotate(-14deg) translateX(-1.5%);
+    }
+
+    to {
+        transform: rotate(-14deg) translateX(1.5%);
+    }
+}
+
+
+/* =========================================================
+   OPTIONAL TITLE
+   ========================================================= */
+
+.mw-label {
+    position: absolute;
+    pointer-events: none;
+
+    left: 50%;
+    bottom: 7%;
+
+    transform: translateX(-50%);
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "Segoe UI",
+        sans-serif;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    letter-spacing: .35em;
+    text-transform: uppercase;
+
+    color: rgba(255,255,255,.42);
+
+    user-select: none;
+}
+
+
+/* ===== LIQUID GLASS ===== */
+    .liquid-glass{
+      background:rgba(255,255,255,.02);
+      backdrop-filter:blur(24px) saturate(140%);
+      -webkit-backdrop-filter:blur(24px) saturate(140%);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 0 2px 1px rgba(255,255,255,.12), inset 0 0 10px 4px rgba(255,255,255,.05), inset 0 4px 16px rgba(17,17,26,.03), 0 8px 32px rgba(0,0,0,.35);
+      border-radius:24px;
+      transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;
+      position:relative;overflow:hidden}
+    .liquid-glass::before{content:'';position:absolute;inset:0;border-radius:24px;pointer-events:none;
+      background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 40%,rgba(180,108,255,.04) 60%,transparent 100%);
+      mix-blend-mode:overlay;opacity:.5}
+    .liquid-glass::after{content:'';position:absolute;inset:-2px;border-radius:26px;pointer-events:none;
+      background:conic-gradient(from 0deg at 30% 30%,transparent 0deg,rgba(101,233,255,.15) 60deg,transparent 120deg,rgba(180,108,255,.12) 180deg,transparent 240deg,rgba(255,183,107,.10) 300deg,transparent 360deg);
+      filter:blur(8px);opacity:.4;z-index:-1}
+    .liquid-glass:hover{
+      border-color:rgba(180,108,255,.25);
+      box-shadow:inset 0 0 2px 1px rgba(255,255,255,.18), inset 0 0 10px 4px rgba(180,108,255,.10), inset 0 4px 16px rgba(17,17,26,.03), 0 12px 40px rgba(0,0,0,.45), 0 0 40px rgba(180,108,255,.08)}
+    .liquid-glass:hover::before{opacity:.7}
+    .liquid-glass-strong{
+      background:rgba(255,255,255,.015);
+      backdrop-filter:blur(40px) saturate(160%);
+      -webkit-backdrop-filter:blur(40px) saturate(160%);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:inset 0 0 2px 1px rgba(255,255,255,.18), inset 0 0 10px 4px rgba(255,255,255,.08), inset 0 4px 16px rgba(17,17,26,.04), 0 12px 40px rgba(0,0,0,.45);
+      border-radius:24px;
+      transition:transform .3s ease,box-shadow .3s ease;
+      position:relative;overflow:hidden}
+    .liquid-glass-strong::before{content:'';position:absolute;inset:0;border-radius:24px;pointer-events:none;
+      background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 35%,rgba(255,183,107,.05) 55%,transparent 100%);
+      mix-blend-mode:overlay;opacity:.6}
+    .liquid-glass-strong::after{content:'';position:absolute;inset:-3px;border-radius:27px;pointer-events:none;
+      background:conic-gradient(from 180deg at 70% 70%,transparent 0deg,rgba(255,183,107,.15) 60deg,transparent 120deg,rgba(101,233,255,.12) 180deg,transparent 240deg,rgba(180,108,255,.10) 300deg,transparent 360deg);
+      filter:blur(10px);opacity:.5;z-index:-1}
+    .liquid-glass-strong:hover{
+      border-color:rgba(255,183,107,.20);
+      box-shadow:inset 0 0 2px 1px rgba(255,255,255,.22), inset 0 0 10px 4px rgba(255,183,107,.08), inset 0 4px 16px rgba(17,17,26,.04), 0 16px 50px rgba(0,0,0,.5), 0 0 50px rgba(255,183,107,.08)}
+    .liquid-glass-strong:hover::before{opacity:.8}
+
+    /* ===== GRAIN OVERLAY ===== */
+    .grain{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:.11;
+      background-image:radial-gradient(rgba(255,255,255,.24) .5px,transparent .5px);background-size:6px 6px;mix-blend-mode:soft-light}
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    @keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(101,233,255,.08)}50%{box-shadow:0 0 40px rgba(101,233,255,.15)}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(101,233,255,.1)}50%{box-shadow:0 0 40px rgba(101,233,255,.25),0 0 60px rgba(180,108,255,.1)}}
+    @keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-3px)}40%,60%{transform:translateX(3px)}}
+    @keyframes taglineGlow{0%{text-shadow:0 0 20px rgba(101,233,255,.3),0 0 40px rgba(180,108,255,.15)}100%{text-shadow:0 0 30px rgba(101,233,255,.5),0 0 60px rgba(180,108,255,.25),0 0 80px rgba(255,183,107,.1)}}
+    .anim-fade{animation:fadeUp .6s cubic-bezier(.16,1,.3,1) both}
+    .anim-slide{animation:slideIn .5s cubic-bezier(.16,1,.3,1) both}
+    .anim-scale{animation:scaleIn .4s cubic-bezier(.16,1,.3,1) both}
+    .anim-glow{animation:glowPulse 3s ease-in-out infinite}
+    .stagger-1{animation-delay:.05s}.stagger-2{animation-delay:.1s}.stagger-3{animation-delay:.15s}.stagger-4{animation-delay:.2s}.stagger-5{animation-delay:.25s}
+    .gradient-text{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--hot),var(--cyan));background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradient-shift 8s ease infinite}
+    .float-anim{animation:float 6s ease-in-out infinite}
+    .pulse-glow{animation:pulse-glow 4s ease-in-out infinite}
+    .shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97) both}
+
+    /* ===== APP SHELL (GROK-LIKE SIDEBAR) ===== */
+    .app-shell{display:flex;min-height:100vh;position:relative;z-index:1}
+    .hidden{display:none!important}
+
+    /* Sidebar */
+    .sidebar{width:260px;flex-shrink:0;border-right:1px solid var(--line);background:rgba(5,6,10,.55);backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);
+      display:flex;flex-direction:column;padding:16px 12px;position:fixed;left:0;top:0;bottom:0;z-index:30;transition:transform .3s ease;overflow:hidden}
+    .sidebar-brand{display:flex;align-items:center;gap:10px;padding:8px 8px 20px;border-bottom:1px solid var(--line);margin-bottom:12px}
+    .sidebar-brand img{width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(101,233,255,.3))}
+    .sidebar-brand strong{font:600 13px "Playwrite BR",cursive;}
+    .sidebar-brand small{font:10px "DM Mono";color:#667084;margin-left:4px}
+    .sidebar-nav{flex:1;display:flex;flex-direction:column;gap:2px;overflow-y:auto;overflow-x:hidden}
+    .sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--muted);font-size:13px;transition:all .2s;border:1px solid transparent;background:transparent;cursor:pointer;width:100%;text-align:left}
+    .sidebar-item:hover{color:var(--ink);background:rgba(255,255,255,.03);border-color:rgba(101,233,255,.1)}
+    .sidebar-item.active{color:var(--cyan);background:rgba(101,233,255,.06);border-color:rgba(101,233,255,.15)}
+    .sidebar-item svg{width:16px;height:16px;flex-shrink:0}
+    .sidebar-section{font:10px "DM Mono";color:var(--faint);text-transform:uppercase;letter-spacing:.12em;padding:16px 10px 8px}
+    /* ===== SIDEBAR COLLAPSIBLE ===== */
+.sidebar-group{overflow:hidden;transition:max-height .35s cubic-bezier(.16,1,.3,1)}
+.sidebar-group.collapsed{max-height:0!important}
+.sidebar-section{cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:color .2s}
+.sidebar-section:hover{color:var(--ink)}
+.sidebar-section::after{content:"";width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid var(--faint);transition:transform .25s ease}
+.sidebar-section.collapsed::after{transform:rotate(-90deg)}
+.sidebar-section.collapsed{border-bottom:0}
+
+    .sidebar-footer{padding-top:12px;border-top:1px solid var(--line);margin-top:auto}
+    .sidebar-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:all .2s}
+    .sidebar-user:hover{background:rgba(255,255,255,.03)}
+    .sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));display:grid;place-items:center;color:#000;font:700 12px Inter,sans-serif;flex-shrink:0;overflow:hidden}
+    .sidebar-user-avatar img{width:100%;height:100%;object-fit:cover;display:none}
+    .sidebar-user-info{min-width:0}
+    .sidebar-user-name{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar-user-email{font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    /* Main area */
+    .main{flex:1;margin-left:260px;min-height:100vh;position:relative;overflow-y:auto}
+    .topbar{height:56px;position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+      background:rgba(5,6,10,.45);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border-bottom:1px solid var(--line)}
+    .topbar-left{display:flex;align-items:center;gap:12px}
+    .topbar-right{display:flex;align-items:center;gap:8px}
+    .topbar-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:#aeb7c7;display:grid;place-items:center;transition:all .2s}
+    .topbar-btn:hover{border-color:rgba(101,233,255,.25);background:rgba(101,233,255,.04);color:var(--ink)}
+    .topbar-pfp{width:32px;height:32px;border-radius:50%;overflow:hidden;display:none}
+    .topbar-pfp img{width:100%;height:100%;object-fit:cover}
+    .topbar-initial{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));display:grid;place-items:center;color:#000;font:600 12px Inter,sans-serif}
+    .privacy-badge{font:10px "DM Mono";color:var(--faint);display:flex;align-items:center;gap:6px}
+    .privacy-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime)}
+
+    /* ===== STATES ===== */
+    .state{display:none}
+    .state.active{display:block}
+
+    /* ===== AUTH GATE ===== */
+    .auth{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;z-index:1}
+    .auth-container{position:relative;z-index:1;width:min(480px,100%);perspective:1200px}
+    .signin-panel{position:absolute;width:100%;opacity:0;transform:translateX(60px) rotateY(8deg);pointer-events:none;transition:all .7s cubic-bezier(.16,1,.3,1)}
+    .signin-panel.active{position:relative;opacity:1;transform:translateX(0) rotateY(0);pointer-events:auto}
+    .signup-step{position:absolute;width:100%;opacity:0;transform:translateX(60px) rotateY(8deg);pointer-events:none;transition:all .7s cubic-bezier(.16,1,.3,1)}
+    .signup-step.active{position:relative;opacity:1;transform:translateX(0) rotateY(0);pointer-events:auto}
+    .signup-step.prev{transform:translateX(-60px) rotateY(-8deg);opacity:0}
+    .auth-panel{padding:44px 40px}
+    .auth-brand{text-align:center;margin-bottom:36px}
+    .auth-brand .logo-mark{width:48px;height:48px;margin:0 auto 16px;border:1.5px solid var(--cyan);border-radius:50%;display:grid;place-items:center;color:var(--cyan);font-family:"Playwrite BR",cursive;font-size:15px;font-weight:700;box-shadow:0 0 30px rgba(101,233,255,.15)}
+    .auth-brand h1{font:700 22px "Playwrite BR",cursive;color:var(--ink);margin:0 0 6px}
+    .auth-brand p{font-size:13px;color:var(--muted);margin:0}
+    .auth-field{margin:18px 0;position:relative}
+    .auth-field label{display:block;font:10px "DM Mono";color:var(--faint);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;transition:color .2s}
+    .auth-field:focus-within label{color:var(--cyan)}
+    .auth-input{width:100%;background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--ink);font-size:15px;outline:0;transition:all .25s cubic-bezier(.16,1,.3,1)}
+    .auth-input:focus{border-color:rgba(101,233,255,.35);box-shadow:0 0 0 4px rgba(101,233,255,.06), inset 0 1px 0 rgba(255,255,255,.04)}
+    .auth-input::placeholder{color:#4a5060}
+    .auth-input.error{border-color:rgba(255,113,138,.4);box-shadow:0 0 0 4px rgba(255,113,138,.06)}
+    .auth-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .auth-select{width:100%;background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--ink);font-size:15px;outline:0;appearance:none;-webkit-appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23667084' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;transition:all .25s}
+    .auth-select:focus{border-color:rgba(101,233,255,.35);box-shadow:0 0 0 4px rgba(101,233,255,.06)}
+    .auth-select option{background:var(--bg);color:var(--ink)}
+    .auth-btn{width:100%;padding:15px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;font-size:15px;font-weight:700;cursor:pointer;transition:all .3s cubic-bezier(.16,1,.3,1);box-shadow:0 0 30px rgba(101,233,255,.2);margin-top:8px}
+    .auth-btn:hover{transform:translateY(-2px);box-shadow:0 0 45px rgba(101,233,255,.3)}
+    .auth-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .auth-divider{display:flex;align-items:center;gap:16px;margin:24px 0;color:var(--faint);font:10px "DM Mono";text-transform:uppercase;letter-spacing:.1em}
+    .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+    .oauth-btn{width:100%;padding:13px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02);color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
+    .oauth-btn:hover{border-color:rgba(101,233,255,.25);background:rgba(101,233,255,.04);color:var(--ink)}
+    .checkbox-wrap{display:flex;align-items:flex-start;gap:10px;margin:14px 0;cursor:pointer}
+    .checkbox-wrap input{width:16px;height:16px;margin-top:2px;accent-color:var(--cyan);flex-shrink:0}
+    .checkbox-wrap span{font-size:12px;color:var(--muted);line-height:1.5}
+    .checkbox-wrap a{color:var(--cyan);border-bottom:1px solid transparent;transition:border-color .2s}
+    .checkbox-wrap a:hover{border-bottom-color:var(--cyan)}
+    .auth-toggle{text-align:center;font-size:13px;color:var(--muted);margin-top:20px}
+    .auth-toggle button{background:none;border:0;color:var(--cyan);cursor:pointer;padding:0;font-size:13px;font-weight:500}
+    .auth-toggle button:hover{text-decoration:underline}
+    .auth-msg{font-size:13px;min-height:20px;text-align:center;margin-top:14px;padding:10px 14px;border-radius:10px;transition:all .3s}
+    .auth-msg.error{background:rgba(255,113,138,.06);color:#ff9eb0;border:1px solid rgba(255,113,138,.15)}
+    .auth-msg.success{background:rgba(199,255,117,.06);color:var(--lime);border:1px solid rgba(199,255,117,.15)}
+    .auth-msg.info{background:rgba(101,233,255,.06);color:var(--cyan);border:1px solid rgba(101,233,255,.15)}
+    .step-dots{display:flex;justify-content:center;gap:8px;margin-bottom:28px}
+    .step-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.1);transition:all .4s}
+    .step-dot.active{background:var(--cyan);box-shadow:0 0 10px rgba(101,233,255,.4)}
+    .step-dot.done{background:var(--lime)}
+    .progress-bar{height:2px;background:var(--line);border-radius:2px;margin-bottom:32px;overflow:hidden}
+    .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:2px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+    .back-btn{position:absolute;top:0;left:0;background:none;border:0;color:var(--faint);font-size:20px;cursor:pointer;padding:8px;transition:color .2s}
+    .back-btn:hover{color:var(--ink)}
+    .guardian-panel{text-align:center;padding:20px 0}
+    .guardian-panel h3{font:600 20px "Space Grotesk";margin:0 0 10px;color:var(--ink)}
+    .guardian-panel p{font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 24px}
+    .guardian-panel .calm-icon{width:64px;height:64px;border-radius:50%;background:rgba(101,233,255,.06);border:1px solid rgba(101,233,255,.15);display:grid;place-items:center;margin:0 auto 24px;color:var(--cyan);font-size:28px}
+    .status-panel{text-align:center;padding:30px 0}
+    .status-panel h3{font:600 22px "Space Grotesk";margin:0 0 12px}
+    .status-panel p{font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 28px;max-width:340px;margin-left:auto;margin-right:auto}
+    .onboarding-wrap{padding:10px 0}
+    .onb-question{margin-bottom:32px}
+    .onb-question h4{font:600 15px "Space Grotesk";color:var(--ink);margin:0 0 14px}
+    .onb-question p{font-size:13px;color:var(--muted);margin:0 0 12px}
+    .onb-options{display:flex;flex-wrap:wrap;gap:8px}
+    .onb-option{padding:10px 18px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.02);color:var(--muted);font-size:13px;cursor:pointer;transition:all .2s}
+    .onb-option:hover{border-color:rgba(101,233,255,.2);color:var(--ink)}
+    .onb-option.selected{border-color:var(--cyan);background:rgba(101,233,255,.08);color:var(--cyan);box-shadow:0 0 20px rgba(101,233,255,.1)}
+    .onb-skip{color:var(--faint);font-size:12px;background:none;border:0;cursor:pointer;margin-top:8px}
+    .onb-skip:hover{color:var(--muted)}
+    textarea.auth-input{padding:12px 16px;line-height:1.5;min-height:80px}
+
+    /* ===== LANDING (GROK-STYLE) ===== */
+    .landing-wrap{max-width:900px;margin:0 auto;padding:80px 24px 60px;display:flex;flex-direction:column;align-items:center;min-height:calc(100vh - 56px);justify-content:center}
+    .landing-hero{text-align:center;margin-bottom:48px}
+    .landing-hero .kicker{font:10px "DM Mono";color:#778196;letter-spacing:.13em;text-transform:uppercase;margin-bottom:16px}
+    .landing-hero h1{font:700 clamp(32px,5vw,56px)/.95 "Space Grotesk",sans-serif;letter-spacing:-.02em;margin:0 0 16px;text-transform:none}
+    .landing-hero p{color:var(--muted);font-size:16px;max-width:520px;margin:0 auto;line-height:1.6}
+    .query-box{width:100%;max-width:720px;margin:0 auto 32px}
+    .query-inner{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 20px;border:1px solid rgba(101,233,255,.18);border-radius:18px;
+      background:rgba(255,255,255,.03);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.1), 0 0 50px rgba(101,233,255,.04);transition:all .3s ease}
+    .query-inner:focus-within{border-color:rgba(101,233,255,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 60px rgba(101,233,255,.08)}
+    .query-inner input{flex:1;background:transparent;border:0;padding:12px 0;color:#fff;outline:0;font-size:16px}
+    .query-inner input::placeholder{color:#4a5060}
+    .query-submit{width:44px;height:44px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;font-weight:700;display:grid;place-items:center;transition:all .2s;box-shadow:0 0 20px rgba(101,233,255,.2)}
+    .query-submit:hover{transform:scale(1.08);box-shadow:0 0 30px rgba(101,233,255,.3)}
+    .query-mode{display:flex;align-items:center;gap:8px;margin-left:8px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);font:11px "DM Mono";color:var(--faint);cursor:pointer;transition:all .2s}
+    .query-mode:hover{border-color:rgba(101,233,255,.2);color:var(--cyan)}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+    .chip{font:11px "DM Mono";color:#8792a5;background:rgba(255,255,255,.025);border:1px solid var(--line);padding:7px 14px;border-radius:999px;cursor:pointer;transition:all .2s}
+    .chip:hover{border-color:rgba(101,233,255,.25);color:#c7f6ff;background:rgba(101,233,255,.04)}
+    .status-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:40px}
+    .status-pill{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.02);font:11px "DM Mono";color:var(--faint)}
+    .status-pill b{color:var(--ink);font-weight:500}
+    .status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime)}
+    .history-section{width:100%;max-width:720px;margin:48px auto 0}
+    .history-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .history-head h2{font:600 14px "Space Grotesk";margin:0;color:var(--ink)}
+    .history-head span{font:10px "DM Mono";color:var(--faint);text-transform:uppercase;letter-spacing:.1em}
+    .history-list{display:flex;flex-direction:column;gap:6px}
+    .history-item{width:100%;border:1px solid var(--line);border-radius:13px;padding:14px 16px;background:rgba(255,255,255,.02);color:var(--ink);text-align:left;display:flex;gap:12px;align-items:center;cursor:pointer;transition:all .2s}
+    .history-item:hover{border-color:rgba(101,233,255,.18);background:rgba(101,233,255,.025)}
+    .history-dot{width:8px;height:8px;border-radius:50%;background:#596276;flex:0 0 auto}
+    .history-dot.complete{background:var(--lime);box-shadow:0 0 12px rgba(199,255,117,.22)}
+    .history-dot.running{background:var(--cyan);box-shadow:0 0 12px rgba(101,233,255,.22)}
+    .history-dot.failed{background:var(--red)}
+    .history-main{flex:1;min-width:0}
+    .history-q{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .history-meta{font:10px "DM Mono";color:#687286;margin-top:3px}
+    .history-arrow{color:#697487}
+
+    /* ===== RESEARCHING STATE ===== */
+    .research-wrap{max-width:800px;margin:0 auto;padding:60px 24px}
+    .research-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .research-kicker{font:10px "DM Mono";color:var(--cyan);letter-spacing:.13em;text-transform:uppercase}
+    .research-jobid{font:10px "DM Mono";padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:#7e899c;background:rgba(255,255,255,.02)}
+    .research-question{font:600 clamp(22px,3.5vw,38px)/1.1 "Space Grotesk";margin:12px 0 40px;letter-spacing:-.03em}
+    .steps{display:flex;flex-direction:column;gap:10px}
+    .step{display:flex;align-items:flex-start;gap:16px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.015);transition:all .3s ease}
+    .step.active{border-color:rgba(101,233,255,.22);box-shadow:0 0 30px rgba(101,233,255,.04), inset 0 1px 0 rgba(101,233,255,.06)}
+    .step.done{opacity:.7}
+    .step-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.04);color:var(--faint);border:1px solid var(--line);font-size:16px;flex-shrink:0;transition:all .3s}
+    .step.active .step-icon{color:#061015;background:linear-gradient(135deg,var(--cyan),var(--violet));border-color:transparent;box-shadow:0 0 20px rgba(101,233,255,.22)}
+    .step.done .step-icon{color:var(--lime);background:rgba(199,255,117,.08);border-color:rgba(199,255,117,.2)}
+    .step-body{flex:1}
+    .step-name{font-size:15px;font-weight:600;margin-bottom:3px}
+    .step-desc{font-size:13px;color:var(--faint)}
+    .step-status{font:11px "DM Mono";color:var(--faint);margin-left:auto;white-space:nowrap}
+    .step.active .step-status{color:var(--cyan)}
+    .step.done .step-status{color:var(--lime)}
+    .cancel-btn{margin-top:28px;padding:10px 20px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02);color:var(--muted);font-size:13px;cursor:pointer;transition:all .2s}
+    .cancel-btn:hover{border-color:rgba(255,113,138,.3);color:var(--red);background:rgba(255,113,138,.04)}
+
+    /* ===== REPORT STATE ===== */
+    .report-wrap{max-width:900px;margin:0 auto;padding:48px 24px 100px}
+    .report-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:28px}
+    .report-kicker{font:10px "DM Mono";text-transform:uppercase;letter-spacing:.16em;color:var(--cyan);margin-bottom:10px}
+    .report-title{font:700 clamp(28px,4.5vw,48px)/.98 "Space Grotesk",sans-serif;letter-spacing:-.02em;margin:0 0 10px;text-transform:none}
+    .report-meta{font:10px "DM Mono";color:#6d778a}
+    .report-block{border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:28px;background:rgba(255,255,255,.02);margin:18px 0;transition:all .3s ease}
+    .report-block:hover{border-color:rgba(255,255,255,.16)}
+    .report-block h3{font:600 18px "Space Grotesk";margin:0 0 12px}
+    .report-block p{font-size:14px;line-height:1.75;color:var(--muted);margin:0}
+    .findings{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+    .finding{padding:20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(90deg,rgba(101,233,255,.018),rgba(255,90,200,.012));transition:all .2s}
+    .finding:hover{border-color:rgba(101,233,255,.15)}
+    .finding-top{display:flex;gap:10px;align-items:baseline;margin-bottom:8px}
+    .finding-no{font:10px "DM Mono";color:var(--cyan)}
+    .finding h4{margin:0;font:600 16px "Space Grotesk"}
+    .finding p{margin:8px 0 0;color:#9fa8b9;font-size:13px;line-height:1.7}
+    .table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.015)}
+    .table{width:100%;border-collapse:collapse;font-size:13px}
+    .table th,.table td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left}
+    .table th{font:10px "DM Mono";color:#8b95a6;text-transform:uppercase;background:rgba(255,255,255,.025)}
+    .table td{color:var(--muted)}
+    .sources-wrap{border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;transition:all .3s ease;margin-top:24px}
+    .sources-toggle{width:100%;background:rgba(255,255,255,.02);border:0;color:var(--ink);padding:16px 20px;text-align:left;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .2s;font-size:14px}
+    .sources-toggle:hover{background:rgba(255,255,255,.04)}
+    .sources-toggle span:last-child{font:11px "DM Mono";color:var(--faint)}
+    .sources-list{display:none}
+    .sources-list.open{display:block}
+    .source-item{display:flex;gap:12px;padding:14px 20px;border-top:1px solid var(--line)}
+    .source-no{font:10px "DM Mono";color:#6d778b;flex-shrink:0}
+    .source-item strong{display:block;font-size:13px;color:var(--ink);margin-bottom:3px}
+    .source-item a{font-size:11px;color:#76e9ff;word-break:break-all}
+    .source-tag{font:9px "DM Mono";padding:3px 8px;border-radius:5px;background:#151b23;color:#8f9aac;margin-top:6px;display:inline-block}
+    .error-block{border:1px solid rgba(255,113,138,.3);background:rgba(255,113,138,.04);padding:24px;border-radius:18px}
+    .error-block h3{margin:0 0 8px;color:#ff9eb0;font:600 16px "Space Grotesk"}
+    .error-block p{margin:0;color:var(--muted);font-size:14px}
+
+    /* ===== SETTINGS MODAL ===== */
+    .modal{position:fixed;inset:0;z-index:50;display:none;place-items:center;padding:20px}
+    .modal.open{display:grid}
+    .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(16px)}
+    .modal-box{position:relative;z-index:1;width:min(640px,100%);max-height:90vh;overflow:auto;padding:32px}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+    .modal-head h3{font:600 22px "Space Grotesk";margin:0}
+    .modal-close{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:#aeb7c7;display:grid;place-items:center;cursor:pointer;transition:all .2s}
+    .modal-close:hover{border-color:rgba(101,233,255,.25);background:rgba(101,233,255,.04);color:var(--ink)}
+    .tabs{display:flex;border-bottom:1px solid var(--line);gap:4px;margin-bottom:24px}
+    .tab{padding:10px 14px;background:0;border:0;color:var(--faint);font-size:13px;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px}
+    .tab:hover{color:var(--muted)}
+    .tab.active{color:var(--ink);border-bottom-color:var(--cyan)}
+    .panel{display:none}
+    .panel.active{display:block}
+    .settings-section-title{font:600 14px "Space Grotesk";color:var(--ink);margin:0 0 16px}
+    .settings-hint{font:10px/1.6 "DM Mono";color:#687286;margin-top:6px}
+    .pfp-wrap{width:90px;height:90px;border-radius:50%;position:relative;margin:0 auto;overflow:hidden;border:2px solid rgba(101,233,255,.25);cursor:pointer;transition:all .3s}
+    .pfp-wrap:hover{border-color:rgba(101,233,255,.55);box-shadow:0 0 24px rgba(101,233,255,.18)}
+    .pfp-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+    .pfp-placeholder{width:100%;height:100%;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;font:700 32px "Space Grotesk",sans-serif}
+    .pfp-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;color:#fff;font-size:11px;opacity:0;transition:opacity .2s;font-family:Inter,sans-serif;letter-spacing:.05em}
+    .pfp-wrap:hover .pfp-overlay{opacity:1}
+    .danger-btn{border-color:rgba(255,113,138,.35)!important;color:#ff9eb0!important}
+    .danger-btn:hover{background:rgba(255,113,138,.1)!important}
+    .btn-secondary{padding:10px 18px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02);color:var(--ink);font-size:13px;cursor:pointer;transition:all .2s}
+    .btn-secondary:hover{border-color:rgba(101,233,255,.2);background:rgba(101,233,255,.04)}
+
+    /* ===== RESPONSIVE ===== */
+    @media(max-width:900px){
+      .sidebar{transform:translateX(-100%)}
+      .sidebar.open{transform:translateX(0)}
+      .main{margin-left:0}
+      .landing-wrap{padding:60px 16px}
+      .research-wrap{padding:40px 16px}
+      .report-wrap{padding:32px 16px}
+    }
+    @media(max-width:560px){
+      .auth-panel{padding:28px 20px}
+      .auth-row{grid-template-columns:1fr}
+      .landing-hero h1{font-size:28px}
+      .research-question{font-size:22px}
+      .report-title{font-size:26px}
+      .step{gap:12px;padding:14px}
+      .step-icon{width:34px;height:34px;font-size:14px}
+      .modal-box{padding:20px}
+    }
+  </style>
+  <base target="_blank">
+<base target="_blank">
 </head>
 <body>
-    <div class="paper-grain"></div>
+<script>
+(function(){
+  const ua=navigator.userAgent.toLowerCase();
+  const isMobile=/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/.test(ua);
+  const isSmall=window.innerWidth<1024;
+  if(isMobile||isSmall){
+    location.href='galaxy.html';
+  }
+})();
+</script>
 
-    <!-- Auth Gate -->
-    <div id="auth-gate" class="auth-gate">
-        <div class="auth-box">
-            <div class="auth-brand">
-                <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
-                    <path d="M24 4L26.5 18L40 24L26.5 30L24 44L21.5 30L8 24L21.5 18L24 4Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
-                    <circle cx="24" cy="24" r="3" stroke="#1D4533" stroke-width="1.2" fill="none"/>
-                </svg>
-                <h1>Nanofossil</h1>
-                <p id="auth-subtitle">Sign in to your account</p>
+<!-- ===== COSMIC BACKGROUND ===== -->
+<div class="mw-space">
+    <div class="mw-stars"></div>
+    <div class="mw-galaxy"></div>
+    <div class="mw-dust"></div>
+    <div class="mw-star-cloud"></div>
+    <div class="mw-core"></div>
+    <div class="mw-nebula one"></div>
+    <div class="mw-nebula two"></div>
+    <div class="mw-nebula three"></div>
+    <div class="mw-vignette"></div>
+</div>
+<div class="grain"></div>
+<div class="stars" id="stars"><div class="orb a"></div><div class="orb b"></div></div>
+<div class="galaxy"></div>
+<div class="blackhole"></div>
+<canvas class="stars-canvas" id="starsCanvas"></canvas>
+<div class="galaxy"></div>
+<div class="nebula"></div>
+<div class="ambient-orb purple"></div>
+<div class="ambient-orb gold"></div>
+<div class="ambient-orb cyan"></div>
+<div class="ambient-orb magenta"></div>
+<div class="ambient-orb lime"></div><!-- ===== AUTH GATE ===== -->
+<div id="auth-gate" class="auth">
+  <div class="auth-container">
+
+    <!-- SIGN IN -->
+    <div id="signin-panel" class="signin-panel active">
+      <div class="liquid-glass auth-panel">
+        <div class="auth-brand anim-fade">
+          <div class="logo-mark">N</div>
+          <h1>Nanofossil</h1>
+          <p>Sign in to your research instrument.</p>
+        </div>
+        <div class="anim-fade stagger-1">
+          <div class="auth-field">
+            <label>Email</label>
+            <input id="si-email" class="auth-input" type="email" autocomplete="email" placeholder="you@example.com">
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input id="si-password" class="auth-input" type="password" autocomplete="current-password" placeholder="••••••••">
+          </div>
+          <button id="si-submit" class="auth-btn">Sign in</button>
+          <div id="si-msg" class="auth-msg"></div>
+          <div class="auth-divider">or</div>
+          <button id="si-google" class="oauth-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Continue with Google
+          </button>
+          <button id="si-github" class="oauth-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            Continue with GitHub
+          </button>
+          <div class="auth-toggle">Don't have an account? <button id="show-signup">Create one</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNUP STEP 1 -->
+    <div id="signup-step-1" class="signup-step">
+      <div class="liquid-glass auth-panel">
+        <button class="back-btn" id="su-back-1" title="Back to sign in">←</button>
+        <div class="auth-brand">
+          <div class="logo-mark">N</div>
+          <h1>Nanofossil</h1>
+          <p>Create your account</p>
+        </div>
+        <div class="progress-bar"><div class="progress-bar-fill" id="su-progress" style="width:25%"></div></div>
+        <div class="step-dots">
+          <div class="step-dot active" data-dot="1"></div>
+          <div class="step-dot" data-dot="2"></div>
+          <div class="step-dot" data-dot="3"></div>
+          <div class="step-dot" data-dot="4"></div>
+        </div>
+        <div class="auth-row">
+          <div class="auth-field">
+            <label>First name</label>
+            <input id="su-fname" class="auth-input" type="text" autocomplete="given-name" placeholder="Ada">
+          </div>
+          <div class="auth-field">
+            <label>Last name</label>
+            <input id="su-lname" class="auth-input" type="text" autocomplete="family-name" placeholder="Lovelace">
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Email</label>
+          <input id="su-email" class="auth-input" type="email" autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="auth-row">
+          <div class="auth-field">
+            <label>Date of birth</label>
+            <input id="su-dob" class="auth-input" type="date" max="2026-08-20">
+          </div>
+          <div class="auth-field">
+            <label>Country / region</label>
+            <select id="su-country" class="auth-select">
+              <option value="" disabled selected>Select</option>
+              <option value="IN">India</option>
+              <option value="US">United States</option>
+              <option value="GB">United Kingdom</option>
+              <option value="CA">Canada</option>
+              <option value="AU">Australia</option>
+              <option value="DE">Germany</option>
+              <option value="FR">France</option>
+              <option value="JP">Japan</option>
+              <option value="SG">Singapore</option>
+              <option value="AE">UAE</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <input id="su-password" class="auth-input" type="password" autocomplete="new-password" placeholder="••••••••">
+        </div>
+        <div class="checkbox-wrap">
+          <input id="su-terms" type="checkbox">
+          <span>I agree to the <a href="#" onclick="event.preventDefault();alert('Terms of Service')">Terms of Service</a> and acknowledge the <a href="#" onclick="event.preventDefault();alert('Privacy Policy')">Privacy Policy</a>.</span>
+        </div>
+        <div class="checkbox-wrap">
+          <input id="su-marketing" type="checkbox">
+          <span>Send me product updates and announcements.</span>
+        </div>
+        <button id="su-next-1" class="auth-btn">Continue</button>
+        <div id="su-msg-1" class="auth-msg"></div>
+        <div class="auth-divider">or</div>
+        <button id="su-google" class="oauth-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+        <button id="su-github" class="oauth-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          Continue with GitHub
+        </button>
+        <div class="auth-toggle">Already have an account? <button id="show-signin">Sign in</button></div>
+      </div>
+    </div>
+
+    <!-- SIGNUP STEP 2: Guardian -->
+    <div id="signup-step-2" class="signup-step">
+      <div class="liquid-glass auth-panel">
+        <button class="back-btn" id="su-back-2" title="Back">←</button>
+        <div class="guardian-panel">
+          <div class="calm-icon">◈</div>
+          <h3>One more step</h3>
+          <p id="guardian-copy">A parent or guardian will need to complete the required consent process before your account is fully activated.</p>
+          <div class="auth-field" style="text-align:left;">
+            <label>Parent / Guardian email</label>
+            <input id="su-guardian" class="auth-input" type="email" placeholder="parent@example.com">
+          </div>
+          <button id="su-next-2" class="auth-btn">Continue</button>
+          <div id="su-msg-2" class="auth-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNUP STEP 3: Status -->
+    <div id="signup-step-3" class="signup-step">
+      <div class="liquid-glass auth-panel">
+        <div class="status-panel">
+          <div class="calm-icon" style="font-size:32px;">✓</div>
+          <h3 id="status-title">Account created</h3>
+          <p id="status-copy">Welcome to Nanofossil. Your research instrument is ready.</p>
+          <button id="su-next-3" class="auth-btn">Tune your instrument</button>
+          <div id="su-msg-3" class="auth-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNUP STEP 4: Onboarding -->
+    <div id="signup-step-4" class="signup-step">
+      <div class="liquid-glass auth-panel">
+        <div class="auth-brand" style="margin-bottom:24px">
+          <div class="logo-mark">N</div>
+          <h1>Tune your instrument</h1>
+          <p>Help us tailor Nanofossil to your research style.</p>
+        </div>
+        <div class="progress-bar"><div class="progress-bar-fill" style="width:100%"></div></div>
+        <div class="onboarding-wrap">
+          <div class="onb-question">
+            <h4>What best describes you?</h4>
+            <div class="onb-options" id="onb-role">
+              <button class="onb-option" data-val="student">Student</button>
+              <button class="onb-option" data-val="researcher">Researcher</button>
+              <button class="onb-option" data-val="developer">Developer</button>
+              <button class="onb-option" data-val="professional">Professional</button>
+              <button class="onb-option" data-val="educator">Educator</button>
+              <button class="onb-option" data-val="founder">Founder</button>
+              <button class="onb-option" data-val="other">Other</button>
             </div>
-
-            <div class="auth-form">
-                <div class="form-group">
-                    <label for="auth-email">Email</label>
-                    <input type="email" id="auth-email" class="modal-input" placeholder="you@example.com" autocomplete="email">
-                </div>
-                <div class="form-group">
-                    <label for="auth-password">Password</label>
-                    <input type="password" id="auth-password" class="modal-input" placeholder="••••••••" autocomplete="current-password">
-                </div>
-                <button type="button" id="auth-submit" class="primary-btn full">Sign in</button>
-
-                <div class="auth-toggle">
-                    <span id="auth-toggle-text">Don't have an account?</span>
-                    <button type="button" id="auth-toggle-btn" class="text-link">Sign up</button>
-                </div>
-
-                <div id="auth-message" class="auth-message"></div>
+          </div>
+          <div class="onb-question">
+            <h4>What will you use Nanofossil for?</h4>
+            <div class="onb-options" id="onb-use">
+              <button class="onb-option" data-val="learning">Learning</button>
+              <button class="onb-option" data-val="academic">Academic research</button>
+              <button class="onb-option" data-val="work">Work research</button>
+              <button class="onb-option" data-val="science">Science</button>
+              <button class="onb-option" data-val="technology">Technology</button>
+              <button class="onb-option" data-val="business">Business</button>
+              <button class="onb-option" data-val="curiosity">General curiosity</button>
             </div>
+          </div>
+          <div class="onb-question">
+            <h4>How deep should Nanofossil go?</h4>
+            <div class="onb-options" id="onb-depth">
+              <button class="onb-option" data-val="quick">Quick</button>
+              <button class="onb-option" data-val="balanced">Balanced</button>
+              <button class="onb-option" data-val="deep">Deep</button>
+              <button class="onb-option" data-val="exhaustive">Exhaustive</button>
+            </div>
+          </div>
+          <div class="onb-question">
+            <h4>What matters most?</h4>
+            <div class="onb-options" id="onb-priority">
+              <button class="onb-option" data-val="accuracy">Accuracy</button>
+              <button class="onb-option" data-val="sources">Source quality</button>
+              <button class="onb-option" data-val="depth">Depth</button>
+              <button class="onb-option" data-val="speed">Speed</button>
+              <button class="onb-option" data-val="clarity">Clarity</button>
+            </div>
+          </div>
+        </div>
+        <button id="su-finish" class="auth-btn">Enter Nanofossil</button>
+        <button id="su-skip-onb" class="onb-skip">Skip for now</button>
+        <div id="su-msg-4" class="auth-msg"></div>
+      </div>
+    </div>
 
-            <div class="auth-divider"><span>or</span></div>
+  </div>
+</div>
+<!-- ===== APP SHELL ===== -->
+<div id="app" class="app-shell hidden">
 
-            <button type="button" id="auth-github" class="github-btn full">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                </svg>
-                Continue with GitHub
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="favicon.png" alt="">
+      <div>
+        <strong>Nanofossil</strong>
+        <small style="display:block;color:var(--faint);font:10px DM Mono;margin-top:2px;">HUYGENS</small>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section" data-toggle="nav-main">Menu</div>
+      <div class="sidebar-group" id="nav-main" style="max-height:500px">
+        <button class="sidebar-item active" id="nav-new-chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          New Chat
+        </button>
+        <button class="sidebar-item" id="nav-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search
+        </button>
+        <button class="sidebar-item" id="nav-imagine">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          Imagine
+        </button>
+        <button class="sidebar-item" id="nav-automations">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          Automations
+        </button>
+        <button class="sidebar-item" id="nav-skills">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Skills and Connectors
+        </button>
+      </div>
+
+      <div class="sidebar-section" data-toggle="nav-projects">Projects</div>
+      <div class="sidebar-group" id="nav-projects" style="max-height:200px">
+        <button class="sidebar-item" id="nav-add-project">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Add project
+        </button>
+      </div>
+
+      <div class="sidebar-section" data-toggle="nav-history">History</div>
+      <div class="sidebar-group" id="nav-history" style="max-height:600px">
+        <div id="sidebar-history" style="display:flex;flex-direction:column;gap:2px;overflow-y:auto;">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">
+          <img id="sidebar-pfp-img" src="" alt="">
+          <span id="sidebar-initial">?</span>
+        </div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">User</div>
+          <div class="sidebar-user-email" id="sidebar-email">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-btn" id="menu-toggle" title="Menu" style="display:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+        <span style="font:10px DM Mono;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;">Instrument / Ready</span>
+      </div>
+      <div class="topbar-right">
+        <div class="privacy-badge">Private</div>
+        <button class="topbar-btn" id="open-settings" title="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="topbar-btn" id="sign-out" title="Sign out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+        <div class="topbar-pfp" id="topbar-pfp-wrap"><img id="topbar-pfp" src="" alt=""></div>
+        <div class="topbar-initial" id="topbar-initial">?</div>
+      </div>
+    </header>
+
+    <!-- ===== LANDING STATE ===== -->
+    <section id="landing" class="state active">
+      <div class="landing-wrap">
+        <div class="landing-hero anim-fade">
+          <div class="kicker">Instrument / Ready</div>
+          <h1>Where the rabbit hole<br>becomes a report.</h1>
+          <p>Ask a question with enough ambiguity to be interesting. Nanofossil will decompose it, search for evidence, cross-check the mess and hand you back a structured result.</p>
+        </div>
+
+        <div class="query-box anim-fade stagger-1">
+          <div class="query-inner">
+            <input id="research-question" placeholder="What do you want to understand?" autocomplete="off">
+            <div class="query-mode" id="query-mode">Fast</div>
+            <button id="submit-research" class="query-submit">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
             </button>
-
-            <p class="auth-hint">Your research history syncs across devices.</p>
-        </div>
-    </div>
-
-    <!-- App -->
-    <div id="app" class="app-hidden">
-
-        <!-- Landing State -->
-        <div id="landing" class="state active">
-            <header class="site-header">
-                <div class="company-mark">Huygens</div>
-                <div class="header-actions">
-                    <button type="button" id="open-settings" class="settings-btn" title="Configure">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 8.68 4.68a1.65 1.65 0 0 0 1.51-1H11a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                        </svg>
-                    </button>
-                    <button type="button" id="user-menu" class="user-btn" title="Account">
-                        <span id="user-avatar"></span>
-                    </button>
-                </div>
-            </header>
-
-            <main class="landing-main">
-                <div class="hero">
-                    <h1 class="logo-wordmark">
-                        <span class="star-mark">
-                            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path class="doodle-path" d="M24 4L26.5 18L40 24L26.5 30L24 44L21.5 30L8 24L21.5 18L24 4Z" stroke="#1D4533" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                <circle class="doodle-path" cx="24" cy="24" r="3" stroke="#1D4533" stroke-width="1.2" fill="none"/>
-                                <path class="doodle-path" d="M12 12C14 10 16 9 18 9" stroke="#1D4533" stroke-width="0.8" stroke-linecap="round" opacity="0.4"/>
-                                <path class="doodle-path" d="M36 36C34 38 32 39 30 39" stroke="#1D4533" stroke-width="0.8" stroke-linecap="round" opacity="0.4"/>
-                            </svg>
-                        </span>
-                        Nanofossil
-                    </h1>
-                    <p class="tagline">The rabbit hole is yours.</p>
-                </div>
-
-                <div class="research-input-container">
-                    <div class="input-wrapper">
-                        <input type="text" id="research-question" class="research-input" placeholder="What would you like to understand?" autocomplete="off">
-                        <button type="button" id="submit-research" class="submit-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="example-prompts">
-                        <span class="examples-label">Try:</span>
-                        <button type="button" class="example-chip" data-question="Why did Concorde fail commercially?">Why did Concorde fail commercially?</button>
-                        <button type="button" class="example-chip" data-question="Compare nuclear fusion approaches in 2026.">Compare nuclear fusion approaches in 2026</button>
-                        <button type="button" class="example-chip" data-question="Research the history of solid-state batteries.">History of solid-state batteries</button>
-                        <button type="button" class="example-chip" data-question="Explain India's semiconductor strategy.">India's semiconductor strategy</button>
-                    </div>
-                </div>
-
-                <div class="recent-research" id="recent-research">
-                    <h3 class="recent-title">Your research</h3>
-                    <div class="recent-list" id="recent-list">
-                        <p class="recent-empty">No research yet. Ask something above.</p>
-                    </div>
-                </div>
-
-                <div class="landing-doodles">
-                    <svg class="doodle-telescope" viewBox="0 0 120 120" fill="none">
-                        <path class="doodle-path" d="M20 100 L40 60 L80 50 L100 30" stroke="#5E3122" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.3"/>
-                        <path class="doodle-path" d="M75 45 L95 25 L105 35 L85 55 Z" stroke="#5E3122" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.3"/>
-                        <circle class="doodle-path" cx="30" cy="25" r="8" stroke="#1D4533" stroke-width="0.8" fill="none" opacity="0.25"/>
-                        <path class="doodle-path" d="M50 15 Q55 10 60 15" stroke="#1D4533" stroke-width="0.8" stroke-linecap="round" fill="none" opacity="0.25"/>
-                    </svg>
-                </div>
-            </main>
-
-            <footer class="landing-footer">
-                <p>An autonomous research instrument by Huygens.</p>
-            </footer>
+          </div>
+          <div class="chips">
+            <button class="chip example-chip" data-question="Why did Concorde fail commercially?">Concorde</button>
+            <button class="chip example-chip" data-question="Compare nuclear fusion approaches in 2026.">Fusion in 2026</button>
+            <button class="chip example-chip" data-question="Research the history of solid-state batteries.">Solid-state batteries</button>
+            <button class="chip example-chip" data-question="Explain India's semiconductor strategy.">India's semiconductors</button>
+          </div>
         </div>
 
-        <!-- Researching State -->
-        <div id="researching" class="state">
-            <header class="research-header">
-                <div class="header-brand">
-                    <span class="mini-star">
-                        <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
-                            <path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z" stroke="#1D4533" stroke-width="1.5" fill="none"/>
-                        </svg>
-                    </span>
-                    <span class="header-title">Nanofossil</span>
-                </div>
-                <div class="job-id" id="job-id-display"></div>
-            </header>
-
-            <main class="researching-main">
-                <div class="question-display">
-                    <span class="question-label">Researching</span>
-                    <h2 id="active-question" class="active-question"></h2>
-                </div>
-
-                <div class="progress-track">
-                    <div class="progress-step" data-step="understand">
-                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-                        <div class="step-content"><span class="step-name">Understanding the question</span><span class="step-desc">Identifying the main questions and comparison criteria</span></div>
-                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
-                    </div>
-                    <div class="progress-step" data-step="research">
-                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 8v6M8 11h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/></svg></div>
-                        <div class="step-content"><span class="step-name">Researching sources</span><span class="step-desc">Searching academic, institutional, industry and primary sources</span></div>
-                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
-                    </div>
-                    <div class="progress-step" data-step="crosscheck">
-                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
-                        <div class="step-content"><span class="step-name">Cross-checking evidence</span><span class="step-desc">Comparing conflicting claims and checking dates</span></div>
-                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
-                    </div>
-                    <div class="progress-step" data-step="synthesize">
-                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><polyline points="10 9 9 9 8 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
-                        <div class="step-content"><span class="step-name">Synthesizing findings</span><span class="step-desc">Combining the evidence into a coherent answer</span></div>
-                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
-                    </div>
-                    <div class="progress-step" data-step="write">
-                        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M12 20h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
-                        <div class="step-content"><span class="step-name">Writing the report</span><span class="step-desc">Structuring the research into a useful document</span></div>
-                        <div class="step-status"><span class="status-pending">○</span><span class="status-active">●</span><span class="status-done">✓</span></div>
-                    </div>
-                </div>
-
-                <div class="researching-doodles">
-                    <svg class="orbit-doodle" viewBox="0 0 200 100" fill="none">
-                        <ellipse cx="100" cy="50" rx="80" ry="30" stroke="#1D4533" stroke-width="0.6" fill="none" opacity="0.2" stroke-dasharray="4 4"/>
-                        <circle cx="30" cy="50" r="4" fill="#1D4533" opacity="0.3"/>
-                        <circle cx="170" cy="50" r="3" fill="#5E3122" opacity="0.3"/>
-                        <path d="M100 20 Q120 10 140 25" stroke="#5E3122" stroke-width="0.5" fill="none" opacity="0.2"/>
-                    </svg>
-                </div>
-
-                <div class="cancel-area">
-                    <button type="button" id="cancel-research" class="text-btn">Cancel</button>
-                </div>
-            </main>
+        <div class="status-row anim-fade stagger-2">
+          <div class="status-pill"><span class="dot"></span><b>Winery</b> engine</div>
+          <div class="status-pill"><span class="dot"></span><b>Qwen3‑4B</b> model</div>
+          <div class="status-pill"><span class="dot"></span><b>Hosted</b> compute</div>
+          <div class="status-pill"><span class="dot"></span><b>Supabase</b> persistence</div>
         </div>
 
-        <!-- Report State -->
-        <div id="report" class="state">
-            <header class="report-header">
-                <div class="header-brand">
-                    <span class="mini-star"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 2L13.5 10L22 12L13.5 14L12 22L10.5 14L2 12L10.5 10L12 2Z" stroke="#1D4533" stroke-width="1.5" fill="none"/></svg></span>
-                    <span class="header-title">Nanofossil</span>
-                </div>
-                <button type="button" id="new-research" class="new-research-btn">New research</button>
-            </header>
-            <main class="report-main">
-                <article id="report-content" class="report-article"></article>
-            </main>
+        <div class="history-section anim-fade stagger-3">
+          <div class="history-head">
+            <h2>Recent research</h2>
+            <span>Last 20 runs</span>
+          </div>
+          <div class="history-list" id="recent-list">
+            <div style="color:var(--faint);font-size:13px;padding:20px;text-align:center;">No research yet. Drop a question above.</div>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <!-- Settings Modal -->
-        <div id="settings-modal" class="modal">
-            <div class="modal-backdrop"></div>
-            <div class="modal-content wide">
-                <h3 class="modal-title">Settings</h3>
-
-                <div class="settings-tabs">
-                    <button type="button" class="settings-tab active" data-tab="github">GitHub</button>
-                    <button type="button" class="settings-tab" data-tab="supabase">Supabase</button>
-                    <button type="button" class="settings-tab" data-tab="account">Account</button>
-                </div>
-
-                <div class="settings-panel active" data-panel="github">
-                    <div class="form-group">
-                        <label for="github-pat">GitHub Personal Access Token</label>
-                        <input type="password" id="github-pat" class="modal-input" placeholder="ghp_xxxxxxxxxxxx">
-                        <span class="input-hint">Needs <code>repo</code> and <code>actions</code> scope. <a href="https://github.com/settings/tokens/new?scopes=repo,actions&description=Nanofossil" target="_blank" rel="noopener">Create one →</a></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="github-repo">Repository</label>
-                        <input type="text" id="github-repo" class="modal-input" placeholder="username/star1">
-                        <span class="input-hint">The repo where Winery runs. Example: <code>AymanHaidry/Huygens-Star1</code></span>
-                    </div>
-                    <button type="button" id="test-connection" class="secondary-btn">Test connection</button>
-                    <div id="test-result" class="test-result"></div>
-                </div>
-
-                <div class="settings-panel" data-panel="supabase">
-                    <div class="form-group">
-                        <label for="sb-url">Supabase URL</label>
-                        <input type="text" id="sb-url" class="modal-input" placeholder="https://xxxx.supabase.co">
-                    </div>
-                    <div class="form-group">
-                        <label for="sb-key">Supabase Anon Key</label>
-                        <input type="password" id="sb-key" class="modal-input" placeholder="eyJ...">
-                        <span class="input-hint">Found in Supabase Dashboard → Project Settings → API.</span>
-                    </div>
-                    <button type="button" id="save-supabase" class="secondary-btn">Save & Connect</button>
-                    <div id="sb-test-result" class="test-result"></div>
-                </div>
-
-                <div class="settings-panel" data-panel="account">
-                    <p class="modal-desc">Signed in as <strong id="account-email">—</strong>.</p>
-                    <button type="button" id="sign-out" class="secondary-btn">Sign out</button>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" id="save-settings" class="primary-btn">Save all settings</button>
-                </div>
+    <!-- ===== RESEARCHING STATE ===== -->
+    <section id="researching" class="state">
+      <div class="research-wrap">
+        <div class="research-head">
+          <div class="research-kicker">Research in progress</div>
+          <div class="research-jobid" id="job-id-display">TRIGGERING…</div>
+        </div>
+        <div class="research-question" id="active-question"></div>
+        <div class="steps">
+          <div class="step" data-step="understand">
+            <div class="step-icon">◎</div>
+            <div class="step-body">
+              <div class="step-name">Understanding the question</div>
+              <div class="step-desc">Identifying sub-questions and search angles.</div>
             </div>
+            <div class="step-status">PENDING</div>
+          </div>
+          <div class="step" data-step="research">
+            <div class="step-icon">⌕</div>
+            <div class="step-body">
+              <div class="step-name">Researching sources</div>
+              <div class="step-desc">Searching and fetching source pages.</div>
+            </div>
+            <div class="step-status">PENDING</div>
+          </div>
+          <div class="step" data-step="crosscheck">
+            <div class="step-icon">⊜</div>
+            <div class="step-body">
+              <div class="step-name">Cross-checking evidence</div>
+              <div class="step-desc">Comparing claims and checking dates.</div>
+            </div>
+            <div class="step-status">PENDING</div>
+          </div>
+          <div class="step" data-step="synthesize">
+            <div class="step-icon">∑</div>
+            <div class="step-body">
+              <div class="step-name">Synthesizing findings</div>
+              <div class="step-desc">Weighing the gathered evidence.</div>
+            </div>
+            <div class="step-status">PENDING</div>
+          </div>
+          <div class="step" data-step="write">
+            <div class="step-icon">↗</div>
+            <div class="step-body">
+              <div class="step-name">Writing the report</div>
+              <div class="step-desc">Assembling the final structured dossier.</div>
+            </div>
+            <div class="step-status">PENDING</div>
+          </div>
         </div>
+        <button id="cancel-research" class="cancel-btn">Cancel research</button>
+      </div>
+    </section>
+
+    <!-- ===== REPORT STATE ===== -->
+    <section id="report" class="state">
+      <div class="report-wrap">
+        <div id="report-content"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<!-- ===== SETTINGS MODAL ===== -->
+<div id="settings-modal" class="modal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-box liquid-glass-strong">
+    <div class="modal-head">
+      <h3>Settings</h3>
+      <button class="modal-close" id="close-settings">×</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="profile">Profile</button>
+      <button class="tab" data-tab="account">Account</button>
+      <button class="tab" data-tab="data">Data & Privacy</button>
     </div>
 
-    <script src="assets/app.js"></script>
+    <!-- Profile Panel -->
+    <div class="panel active" data-panel="profile">
+      <div style="text-align:center;margin-bottom:28px;">
+        <div class="pfp-wrap" id="pfp-wrap">
+          <img id="prof-pfp" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:50%;">
+          <div id="prof-pfp-placeholder" class="pfp-placeholder">?</div>
+          <div class="pfp-overlay">Change</div>
+        </div>
+        <input type="file" id="pfp-input" accept="image/*" style="display:none;">
+        <div style="font-size:11px;color:var(--faint);margin-top:8px;">Click to upload photo</div>
+      </div>
+      <div class="auth-row">
+        <div class="auth-field"><label>First name</label><input id="prof-fname" class="auth-input" type="text" autocomplete="given-name" placeholder="First name"></div>
+        <div class="auth-field"><label>Last name</label><input id="prof-lname" class="auth-input" type="text" autocomplete="family-name" placeholder="Last name"></div>
+      </div>
+      <div class="auth-field"><label>Nickname</label><input id="prof-nickname" class="auth-input" type="text" placeholder="What should we call you?"></div>
+      <div class="auth-row">
+        <div class="auth-field"><label>Date of birth</label><input id="prof-dob" class="auth-input" type="date"></div>
+        <div class="auth-field"><label>Country / region</label>
+          <select id="prof-country" class="auth-select">
+            <option value="" disabled selected>Select country</option>
+            <option value="IN">India</option>
+            <option value="US">United States</option>
+            <option value="GB">United Kingdom</option>
+            <option value="CA">Canada</option>
+            <option value="AU">Australia</option>
+            <option value="DE">Germany</option>
+            <option value="FR">France</option>
+            <option value="JP">Japan</option>
+            <option value="SG">Singapore</option>
+            <option value="AE">UAE</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="auth-field"><label>Bio</label><textarea id="prof-bio" class="auth-input" placeholder="A short bio..."></textarea></div>
+      <button id="save-profile" class="auth-btn" style="margin-top:8px;">Save profile</button>
+      <div id="prof-msg" class="auth-msg"></div>
+    </div>
+
+    <!-- Account Panel -->
+    <div class="panel" data-panel="account">
+      <div class="settings-section-title">Email</div>
+      <div class="auth-field"><label>Current email</label><input id="acc-email" class="auth-input" type="email" disabled style="opacity:.5;"></div>
+      <div class="auth-field"><label>New email address</label><input id="acc-new-email" class="auth-input" type="email" placeholder="you@example.com"></div>
+      <button id="change-email" class="btn-secondary" style="margin-bottom:24px;">Change email</button>
+      <div style="border-top:1px solid var(--line);padding-top:24px;margin-top:4px;">
+        <div class="settings-section-title">Password</div>
+        <div class="auth-field"><label>Current password</label><input id="acc-current-pw" class="auth-input" type="password" placeholder="••••••••"></div>
+        <div class="auth-row">
+          <div class="auth-field"><label>New password</label><input id="acc-new-pw" class="auth-input" type="password" placeholder="••••••••"></div>
+          <div class="auth-field"><label>Confirm password</label><input id="acc-confirm-pw" class="auth-input" type="password" placeholder="••••••••"></div>
+        </div>
+        <button id="change-password" class="btn-secondary">Update password</button>
+      </div>
+      <div id="acc-msg" class="auth-msg"></div>
+    </div>
+
+    <!-- Data & Privacy Panel -->
+    <div class="panel" data-panel="data">
+      <div style="margin-bottom:28px;">
+        <div class="settings-section-title">Export your data</div>
+        <p style="margin:0;font-size:13px;color:var(--muted);line-height:1.6;">Download a copy of your profile and research history.</p>
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+          <button id="export-json" class="btn-secondary">Export as JSON</button>
+          <button id="download-chats" class="btn-secondary">Download chats (Markdown)</button>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--line);padding-top:28px;margin-top:28px;">
+        <div class="settings-section-title" style="color:var(--red);">Danger zone</div>
+        <p style="margin:0;font-size:13px;color:var(--muted);line-height:1.6;">Once you delete your account, there is no going back. All research history will be permanently removed.</p>
+        <button id="delete-account" class="btn-secondary danger-btn" style="margin-top:16px;">Delete account</button>
+      </div>
+      <div id="data-msg" class="auth-msg"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+const CONFIG={pollInterval:10000,maxPolls:90,authCheckTimeout:8000};
+const SUPABASE_DEFAULTS={url:'https://cknkncrnfdxqdcvwsdtz.supabase.co',key:'sb_publishable_--4D89c7RptA5n62XpUxHQ_YmMNSX-S'};
+let supabase=null,currentUser=null,currentJob=null,pollTimer=null,pollCount=0;
+
+const $=id=>document.getElementById(id);
+const esc=t=>{if(t==null)return '';const d=document.createElement('div');d.textContent=String(t);return d.innerHTML};
+function getSupabaseConfig(){return{url:localStorage.getItem('star1_sb_url')||SUPABASE_DEFAULTS.url,key:localStorage.getItem('star1_sb_key')||SUPABASE_DEFAULTS.key}}
+function initSupabase(){const c=getSupabaseConfig();try{if(!window.supabase?.createClient)return false;supabase=window.supabase.createClient(c.url,c.key);return true}catch(e){console.error(e);return false}}
+function showAuthGate(){$('auth-gate').classList.remove('hidden');$('app').classList.add('hidden')}
+function showApp(){$('auth-gate').classList.add('hidden');$('app').classList.remove('hidden');$('sidebar-email').textContent=currentUser?.email||'—';$('acc-email').value=currentUser?.email||'';updateAvatarUI();}
+async function checkAuth(){const to=setTimeout(showAuthGate,CONFIG.authCheckTimeout);if(!supabase){clearTimeout(to);showAuthGate();return}try{const{data,error}=await supabase.auth.getSession();clearTimeout(to);if(error)throw error;const session=data?.session;if(session?.user){currentUser=session.user;showApp();await loadUserProfile();renderRecentResearch()}else showAuthGate()}catch(e){clearTimeout(to);console.error(e);showAuthGate()}}
+async function signIn(email,password){return supabase?.auth.signInWithPassword({email,password})||{error:new Error('Supabase unavailable')}}
+async function signUp(email,password){return supabase?.auth.signUp({email,password,options:{emailRedirectTo:location.href}})||{error:new Error('Supabase unavailable')}}
+async function signInWithGitHub(){return supabase?.auth.signInWithOAuth({provider:'github',options:{redirectTo:location.href}})||{error:new Error('Supabase unavailable')}}
+async function signOut(){if(supabase)await supabase.auth.signOut();currentUser=null;showAuthGate()}
+async function loadUserProfile(){if(!supabase||!currentUser)return;try{const{data,error}=await supabase.from('profiles').select('*').eq('id',currentUser.id).single();if(error&&error.code!=='PGRST116')throw error;if(data){$('prof-fname').value=data.first_name||'';$('prof-lname').value=data.last_name||'';$('prof-nickname').value=data.nickname||'';$('prof-dob').value=data.dob||'';$('prof-country').value=data.country||'';$('prof-bio').value=data.bio||'';updateAvatarUI(data.avatar_url||null);}}catch(e){console.error('loadUserProfile',e);}}
+async function saveUserProfile(){if(!supabase||!currentUser)return;try{await supabase.from('profiles').upsert({id:currentUser.id,updated_at:new Date().toISOString()})}catch(e){console.error(e)}}
+async function createResearchJob(question,runId){if(!supabase||!currentUser)return null;try{const{data,error}=await supabase.from('research_jobs').insert({user_id:currentUser.id,question,status:'pending',github_run_id:runId?.toString()}).select().single();if(error)throw error;return data}catch(e){console.error(e);return null}}
+async function updateResearchJob(jobId,updates){if(!supabase||!jobId)return;try{await supabase.from('research_jobs').update(updates).eq('id',jobId)}catch(e){}}
+async function fetchResearchHistory(){if(!supabase||!currentUser)return [];try{const{data,error}=await supabase.from('research_jobs').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(20);if(error)throw error;return data||[]}catch(e){return[]}}
+
+async function triggerResearch(question){
+  const sb=getSupabaseConfig();
+  const fnUrl=sb.url.replace(/\/$/,'')+'/functions/v1/research';
+  const res=await fetch(fnUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+sb.key},body:JSON.stringify({question,user_id:currentUser?.id})});
+  if(!res.ok){const err=await res.text();throw new Error('Research service unavailable: '+res.status+' '+err);}
+  const d=await res.json();
+  return{id:d.job_id||`job-${Date.now()}`,runId:d.job_id||null};
+}
+async function checkJobStatus(runId){
+  const sb=getSupabaseConfig();
+  const statusUrl=sb.url.replace(/\/$/,'')+'/functions/v1/research/status?job_id='+encodeURIComponent(runId);
+  const res=await fetch(statusUrl,{headers:{'Authorization':'Bearer '+sb.key}});
+  if(!res.ok) throw new Error('Status check failed: '+res.status);
+  return await res.json();
+}
+
+function setState(id){document.querySelectorAll('.state').forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
+function setStep(name,state){const e=document.querySelector(`[data-step="${name}"]`);if(!e)return;e.classList.remove('active','done');if(state==='active')e.classList.add('active');if(state==='done')e.classList.add('done');const s=e.querySelector('.step-status');if(s)s.textContent=state==='active'?'RUNNING':state==='done'?'DONE':'PENDING'}
+function resetSteps(){['understand','research','crosscheck','synthesize','write'].forEach(x=>setStep(x,'pending'))}
+function updateProgress(status){if(status==='queued'||status==='waiting'){setStep('understand','active');return}if(status==='in_progress'){const elapsed=pollCount*CONFIG.pollInterval/1000;if(elapsed<20){setStep('understand','done');setStep('research','active')}else if(elapsed<60){setStep('understand','done');setStep('research','done');setStep('crosscheck','active')}else if(elapsed<100){setStep('understand','done');setStep('research','done');setStep('crosscheck','done');setStep('synthesize','active')}else{setStep('understand','done');setStep('research','done');setStep('crosscheck','done');setStep('synthesize','done');setStep('write','active')}}}
+
+async function renderRecentResearch(){
+  const box=$('recent-list');
+  const items=await fetchResearchHistory();
+  renderSidebarHistory(items);
+  if(!items.length){box.innerHTML='<div style="color:var(--faint);font-size:13px;padding:20px;text-align:center;">No research yet. Drop a question above.</div>';return}
+  box.innerHTML=items.map(i=>`<button class="history-item" data-job-id="${esc(i.id)}" data-run-id="${esc(i.github_run_id||'')}"><span class="history-dot ${esc(i.status)}"></span><span class="history-main"><div class="history-q">${esc(i.question)}</div><div class="history-meta">${new Date(i.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})} · ${esc(i.status)}</div></span><span class="history-arrow">↗</span></button>`).join('');
+  box.querySelectorAll('.history-item').forEach(b=>b.addEventListener('click',()=>loadPastResearch(b.dataset.jobId,b.dataset.runId)));
+}
+
+function renderSidebarHistory(items){
+  const box=$('sidebar-history');
+  if(!items.length){box.innerHTML='<div style="color:var(--faint);font-size:11px;padding:8px 10px;">No history</div>';return}
+  box.innerHTML=items.slice(0,5).map(i=>`<button class="sidebar-item" style="font-size:12px;padding:7px 10px;" data-job-id="${esc(i.id)}" data-run-id="${esc(i.github_run_id||'')}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(i.question)}</span></button>`).join('');
+  box.querySelectorAll('.sidebar-item').forEach(b=>b.addEventListener('click',()=>loadPastResearch(b.dataset.jobId,b.dataset.runId)));
+}
+
+async function loadPastResearch(jobId,runId){
+  if(supabase&&jobId){
+    try{const{data}=await supabase.from('research_jobs').select('*').eq('id',jobId).single();if(data?.result_json){renderReport({report:data.result_json});setState('report');return}}
+    catch(e){}
+  }
+  showError('Could not load this research result.');
+}
+
+function renderReport(data){
+  const c=$('report-content');
+  if(!data?.report){c.innerHTML='<div class="error-block"><h3>Nanofossil could not complete the research.</h3><p>The result file was empty or malformed.</p></div>';return}
+  const r=data.report;
+  const date=r.generated_at?new Date(r.generated_at).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}):new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  let html=`<div class="report-head"><div><div class="report-kicker">Research dossier</div><h1 class="report-title">${esc(r.title||'Research Report')}</h1><div class="report-meta">NANOFOSSIL · ${esc(date)} · ${r.sources?.length||0} SOURCES</div></div><button id="new-research" class="btn-secondary" style="background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;border:0;font-weight:700;">New research</button></div>`;
+  if(r.executive_summary)html+=`<div class="report-block"><h3>Executive summary</h3><p>${esc(r.executive_summary)}</p></div>`;
+  if(r.key_findings?.length){html+='<div class="report-kicker" style="margin-top:32px">Key findings</div><div class="findings">';r.key_findings.forEach((f,i)=>html+=`<article class="finding"><div class="finding-top"><span class="finding-no">${String(i+1).padStart(2,'0')}</span><h4>${esc(f.title)}</h4></div><p>${esc(f.content)}</p></article>`);html+='</div>'}
+  if(r.comparison?.headers&&r.comparison?.rows){html+='<div class="report-kicker" style="margin-top:32px">Comparison</div><div class="table-wrap"><table class="table"><thead><tr>'+r.comparison.headers.map(h=>`<th>${esc(h)}</th>`).join('')+'</tr></thead><tbody>'+r.comparison.rows.map(row=>'<tr>'+row.map(cell=>`<td>${esc(cell)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>'}
+  if(r.evidence_assessment)html+=`<div class="report-block"><h3>What the evidence suggests</h3><p>${esc(r.evidence_assessment)}</p></div>`;
+  if(r.confidence_notes)html+=`<div class="report-block"><h3>Confidence note</h3><p>${esc(r.confidence_notes)}</p></div>`;
+  if(r.sources?.length){html+='<div class="sources-wrap"><button class="sources-toggle" id="sources-toggle"><span>Sources</span><span>'+r.sources.length+' total</span></button><div class="sources-list" id="sources-list">';r.sources.forEach((s,i)=>html+=`<div class="source-item"><div class="source-no">${i+1}</div><div><strong>${esc(s.title||'Untitled')}</strong><a href="${esc(s.url||'#')}" target="_blank" rel="noopener">${esc(s.url||'')}</a><div class="source-tag">${esc(s.type||'secondary')}</div></div></div>`);html+='</div></div>'}
+  c.innerHTML=html;
+  document.getElementById('new-research')?.addEventListener('click',()=>setState('landing'));
+  document.getElementById('sources-toggle')?.addEventListener('click',()=>document.getElementById('sources-list')?.classList.toggle('open'));
+}
+
+function showError(message){$('report-content').innerHTML=`<div class="error-block"><h3>Nanofossil could not complete the research.</h3><p>${esc(message)}</p></div>`;setState('report')}
+
+async function pollJob(){
+  if(!currentJob?.runId&&!currentJob?.hosted)return;
+  pollCount++;
+  if(pollCount>CONFIG.maxPolls){clearInterval(pollTimer);pollTimer=null;showError('This run is taking longer than expected.');if(currentJob.dbId)await updateResearchJob(currentJob.dbId,{status:'failed'});return}
+  try{
+    let s;
+    if(currentJob.hosted){
+      const sb=getSupabaseConfig();
+      const statusUrl=sb.url.replace(/\/$/,'')+'/functions/v1/research/status?job_id='+encodeURIComponent(currentJob.runId);
+      const res=await fetch(statusUrl,{headers:{'Authorization':'Bearer '+sb.key}});
+      if(!res.ok)throw new Error('Status check failed: '+res.status);
+      s=await res.json();
+      if(s.status==='running'||s.status==='pending'){updateProgress(s.status);if(currentJob.dbId)await updateResearchJob(currentJob.dbId,{status:'running'})}
+      else if(s.status==='success'){clearInterval(pollTimer);pollTimer=null;['understand','research','crosscheck','synthesize','write'].forEach(x=>setStep(x,'done'));if(s.result){renderReport(s.result);setState('report');if(currentJob.dbId)await updateResearchJob(currentJob.dbId,{status:'complete',result_json:s.result.report});renderRecentResearch()}else showError('Research completed but no result was found.')}
+      else{clearInterval(pollTimer);pollTimer=null;showError(s.error||'Research failed');if(currentJob.dbId)await updateResearchJob(currentJob.dbId,{status:'failed'});renderRecentResearch()}
+    }else{
+      s=await checkJobStatus(currentJob.runId);
+      if(s.status==='running'){updateProgress(s.runStatus);if(currentJob.dbId)await updateResearchJob(currentJob.dbId,{status:'running'})}
+      else if(s.status==='success'){clearInterval(pollTimer);pollTimer=null;['understand','research','crosscheck','synthesize','write'].forEach(x=>setStep(x,'done'));if(s.result){renderReport(s.result);setState('report');if(currentJob.dbId)await updateResearchJob(currentJob.dbId,{status:'complete',result_json:s.result.report});renderRecentResearch()}else showError('Research completed but no result was found.')}
+      else{clearInterval(pollTimer);pollTimer=null;showError(s.error);if(currentJob.dbId)await updateResearchJob(currentJob.dbId,{status:'failed'});renderRecentResearch()}
+    }
+  }catch(e){console.error('pollJob',e);}
+}
+
+async function startResearch(question){
+  const sb=getSupabaseConfig();
+  if(!sb.url||!sb.key){showError('Service unavailable. Please try again later.');return}
+  $('active-question').textContent=question;
+  $('job-id-display').textContent='TRIGGERING…';
+  resetSteps();
+  setState('researching');
+  try{
+    const job=await triggerResearch(question);
+    currentJob=job;
+    $('job-id-display').textContent=`JOB #${job.id}`;
+    if(supabase&&currentUser){const db=await createResearchJob(question,job.runId);if(db)currentJob.dbId=db.id}
+    pollCount=0;
+    pollTimer=setInterval(pollJob,CONFIG.pollInterval);
+    pollJob();
+  }catch(e){showError(e.message||'Failed to start research. Please try again.');}
+}
+
+function openSettings(tab='profile'){$('settings-modal').classList.add('open');switchTab(tab)}
+function switchTab(tab){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.dataset.panel===tab))}
+
+function updateAvatarUI(url){
+  const img=$('prof-pfp'),ph=$('prof-pfp-placeholder'),tb=$('topbar-pfp'),ti=$('topbar-initial'),sbImg=$('sidebar-pfp-img'),sbInit=$('sidebar-initial');
+  const name=($('prof-nickname').value||currentUser?.email||'?')[0].toUpperCase();
+  if(url){img.src=url;img.style.display='block';ph.style.display='none';tb.src=url;tb.style.display='block';ti.style.display='none';sbImg.src=url;sbImg.style.display='block';sbInit.style.display='none';}
+  else{img.style.display='none';ph.style.display='grid';tb.style.display='none';ti.style.display='grid';sbImg.style.display='none';sbInit.style.display='grid';ph.textContent=name;ti.textContent=name;sbInit.textContent=name;}
+  $('sidebar-name').textContent=$('prof-nickname').value||currentUser?.email?.split('@')[0]||'User';
+}
+
+// ===== EVENT HANDLERS =====
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(initSupabase())checkAuth();else showAuthGate();
+
+  // Stars canvas
+  (function(){
+    const canvas=document.getElementById('starsCanvas');
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    let w,h,stars=[];
+    const colors=[[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255]];
+    function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;}
+    resize();window.addEventListener('resize',resize);
+    for(let i=0;i<180;i++){
+      const c=colors[Math.floor(Math.random()*colors.length)];
+      stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.6+.2,o:Math.random()*.5+.08,twinkleSpeed:Math.random()*.02+.003,twinkleOffset:Math.random()*Math.PI*2,color:c,driftX:(Math.random()-.5)*.15,driftY:(Math.random()-.5)*.1});
+    }
+    function draw(){
+      ctx.clearRect(0,0,w,h);
+      const t=Date.now()*.001;
+      stars.forEach(s=>{
+        const twinkle=Math.sin(t*s.twinkleSpeed+s.twinkleOffset);
+        const twinkleAlpha=s.o*(twinkle*.45+.55);
+        s.x+=s.driftX;s.y+=s.driftY;
+        if(s.x<0)s.x=w;if(s.x>w)s.x=0;if(s.y<0)s.y=h;if(s.y>h)s.y=0;
+        ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        const alpha=twinkleAlpha.toFixed(3);
+        ctx.fillStyle=`rgba(${s.color[0]},${s.color[1]},${s.color[2]},${alpha})`;ctx.fill();
+        if(s.r>1.1){ctx.beginPath();ctx.arc(s.x,s.y,s.r*3,0,Math.PI*2);ctx.fillStyle=`rgba(${s.color[0]},${s.color[1]},${s.color[2]},${(alpha*.2).toFixed(3)})`;ctx.fill();}
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+  // CSS starfield
+  (function(){
+    const holder=document.getElementById('stars');
+    if(!holder)return;
+    const n=60;
+    for(let i=0;i<n;i++){
+      const s=document.createElement('span');s.className='star';
+      s.style.left=Math.random()*100+'%';
+      s.style.top=Math.random()*100+'%';
+      s.style.animationDelay=(Math.random()*4)+'s';
+      s.style.opacity=(.04+Math.random()*.25).toFixed(2);
+      holder.appendChild(s);
+    }
+  })();
+
+
+
+  // Sidebar collapsible sections
+  document.querySelectorAll('.sidebar-section[data-toggle]').forEach(sec=>{
+    sec.addEventListener('click',()=>{
+      const id=sec.dataset.toggle;
+      const group=document.getElementById(id);
+      if(!group)return;
+      const isCollapsed=group.classList.toggle('collapsed');
+      sec.classList.toggle('collapsed',isCollapsed);
+    });
+  });
+
+  // Mobile sidebar toggle
+  const sidebar=$('sidebar');
+  $('menu-toggle')?.addEventListener('click',()=>sidebar.classList.toggle('open'));
+  if(window.innerWidth<=900)$('menu-toggle').style.display='grid';
+  window.addEventListener('resize',()=>{$('menu-toggle').style.display=window.innerWidth<=900?'grid':'none';});
+
+  // Query mode toggle
+  const modeBtn=$('query-mode');
+  const modes=['Fast','Balanced','Deep'];
+  let modeIdx=0;
+  modeBtn?.addEventListener('click',()=>{modeIdx=(modeIdx+1)%modes.length;modeBtn.textContent=modes[modeIdx];});
+
+  // ===== AUTH FLOW =====
+  let signupStep=1,signupData={};
+  function goToStep(n){
+    document.querySelectorAll('.signup-step').forEach((el,i)=>{el.classList.remove('active','prev');if(i+1===n)el.classList.add('active');else if(i+1<n)el.classList.add('prev');});
+    $('signin-panel').classList.remove('active');
+    signupStep=n;
+    updateDots();
+    if($('su-progress'))$('su-progress').style.width=(n*25)+'%';
+  }
+  function updateDots(){document.querySelectorAll('.step-dot').forEach((d,i)=>{d.classList.remove('active','done');if(i+1===signupStep)d.classList.add('active');else if(i+1<signupStep)d.classList.add('done');});}
+  function showMsg(id,txt,type){const el=$(id);if(!el)return;el.textContent=txt;el.className='auth-msg '+type;}
+  function clearMsg(id){const el=$(id);if(el){el.textContent='';el.className='auth-msg';}}
+  function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),500);}
+  function calcAge(dobStr){const dob=new Date(dobStr),today=new Date();let age=today.getFullYear()-dob.getFullYear();const m=today.getMonth()-dob.getMonth();if(m<0||(m===0&&today.getDate()<dob.getDate()))age--;return age;}
+  function ageCategory(age){if(age>=18)return'adult';if(age>=16)return'teen_16_17';if(age>=13)return'young_teen_13_15';return'under_13';}
+
+  function showSignin(){$('signin-panel').classList.add('active');document.querySelectorAll('.signup-step').forEach(el=>el.classList.remove('active','prev'));signupStep=0;}
+  function showSignup(){$('signin-panel').classList.remove('active');goToStep(1);}
+  $('show-signup').addEventListener('click',showSignup);
+  $('show-signin').addEventListener('click',showSignin);
+  $('su-back-1').addEventListener('click',showSignin);
+
+  // Sign In
+  $('si-submit').addEventListener('click',async()=>{
+    clearMsg('si-msg');
+    const email=$('si-email').value.trim(),pw=$('si-password').value;
+    if(!email||!pw){showMsg('si-msg','Please enter email and password.','error');shake($('si-email').parentElement);return;}
+    showMsg('si-msg','Signing in…','info');
+    const out=await signIn(email,pw);
+    if(out.error){showMsg('si-msg',out.error.message,'error');return;}
+    if(out.data?.user&&out.data?.session){currentUser=out.data.user;showApp();loadUserProfile();renderRecentResearch();}
+    else{showMsg('si-msg','Check your email to confirm, then sign in.','success');}
+  });
+  $('si-password').addEventListener('keypress',e=>{if(e.key==='Enter')$('si-submit').click()});
+  $('si-github').addEventListener('click',async()=>{const{error}=await signInWithGitHub();if(error)showMsg('si-msg',error.message,'error');});
+  $('si-google').addEventListener('click',async()=>{if(!supabase){showMsg('si-msg','Supabase not available.','error');return;}const{error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href}});if(error)showMsg('si-msg',error.message,'error');});
+
+  // Signup Step 1
+  $('su-next-1').addEventListener('click',async()=>{
+    clearMsg('su-msg-1');
+    const fname=$('su-fname').value.trim(),lname=$('su-lname').value.trim(),email=$('su-email').value.trim(),
+          dob=$('su-dob').value,country=$('su-country').value,pw=$('su-password').value,terms=$('su-terms').checked;
+    if(!fname||!lname){showMsg('su-msg-1','Please enter your full name.','error');shake($('su-fname').parentElement);return;}
+    if(!email||!email.includes('@')){showMsg('su-msg-1',"That email address doesn't look right.",'error');shake($('su-email').parentElement);return;}
+    if(!dob){showMsg('su-msg-1','Please enter a valid date of birth.','error');shake($('su-dob').parentElement);return;}
+    if(!country){showMsg('su-msg-1','Please select your country.','error');shake($('su-country').parentElement);return;}
+    if(!pw||pw.length<6){showMsg('su-msg-1','Password must be at least 6 characters.','error');shake($('su-password').parentElement);return;}
+    if(!terms){showMsg('su-msg-1','Please agree to the Terms of Service.','error');return;}
+    const age=calcAge(dob),cat=ageCategory(age);
+    signupData={fname,lname,email,dob,country,pw,terms,marketing:$('su-marketing').checked,age,age_category:cat};
+    if(cat==='adult'){
+      showMsg('su-msg-1','Creating account…','info');
+      const out=await signUp(email,pw);
+      if(out.error){showMsg('su-msg-1',out.error.message,'error');return;}
+      if(out.data?.user){currentUser=out.data.user;await saveProfileMeta(signupData);}
+      goToStep(3);
+      $('status-title').textContent='Welcome to Nanofossil';
+      $('status-copy').textContent='Your research instrument is ready.';
+      $('su-next-3').textContent='Tune your instrument';
+    }else if(cat==='teen_16_17'){
+      $("guardian-copy").textContent="Enter a parent or guardian's email. We'll send them information about this account and any required consent steps.";
+      goToStep(2);
+    }else if(cat==='young_teen_13_15'){
+      $('guardian-copy').textContent="A parent or guardian will need to complete the required consent process before your account is fully activated.";
+      goToStep(2);
+    }else{
+      $('guardian-copy').textContent="Nanofossil requires a parent or guardian to complete setup for this account.";
+      goToStep(2);
+    }
+  });
+  $('su-back-2').addEventListener('click',()=>goToStep(1));
+
+  // Signup Step 2
+  $('su-next-2').addEventListener('click',async()=>{
+    clearMsg('su-msg-2');
+    const g=$('su-guardian').value.trim();
+    if(!g||!g.includes('@')){showMsg('su-msg-2','Please enter a parent or guardian email to continue.','error');shake($('su-guardian').parentElement);return;}
+    signupData.guardian_email=g;
+    showMsg('su-msg-2','Creating account…','info');
+    const out=await signUp(signupData.email,signupData.pw);
+    if(out.error){showMsg('su-msg-2',out.error.message,'error');return;}
+    if(out.data?.user){currentUser=out.data.user;signupData.guardian_status='pending';signupData.account_status='pending_guardian';await saveProfileMeta(signupData);}
+    goToStep(3);
+    if(signupData.age_category==='under_13'){
+      $('status-title').textContent='Account pending';
+      $('status-copy').textContent="Your account is waiting for the required parent or guardian step.";
+      $('su-next-3').textContent='Done';
+    }else{
+      $('status-title').textContent='Account created';
+      $("status-copy").textContent="A confirmation has been sent to your guardian. You'll be notified when your account is activated.";
+      $('su-next-3').textContent='Done';
+    }
+  });
+
+  // Signup Step 3
+  $('su-next-3').addEventListener('click',()=>{
+    if(signupData.age_category==='under_13'||signupData.account_status==='pending_guardian'){showMsg('su-msg-3','Your account will be activated once the guardian step is complete.','info');return;}
+    goToStep(4);
+  });
+
+  // Signup Step 4
+  document.querySelectorAll('.onb-options').forEach(group=>{
+    group.addEventListener('click',e=>{if(!e.target.classList.contains('onb-option'))return;group.querySelectorAll('.onb-option').forEach(o=>o.classList.remove('selected'));e.target.classList.add('selected');});
+  });
+  async function finishOnboarding(skip=false){
+    const prefs={};
+    if(!skip){
+      const r=document.querySelector('#onb-role .selected'),u=document.querySelector('#onb-use .selected'),
+            d=document.querySelector('#onb-depth .selected'),p=document.querySelector('#onb-priority .selected');
+      if(r)prefs.role=r.dataset.val;if(u)prefs.use=u.dataset.val;if(d)prefs.depth=d.dataset.val;if(p)prefs.priority=p.dataset.val;
+    }
+    prefs.skipped=skip;
+    localStorage.setItem('nanofossil_onboarding',JSON.stringify(prefs));
+    if(currentUser&&supabase){try{await supabase.from('profiles').upsert({id:currentUser.id,onboarding_prefs:prefs,updated_at:new Date().toISOString()});}catch(e){}}
+    $('auth-gate').classList.add('hidden');showApp();loadUserProfile();renderRecentResearch();
+  }
+  $('su-finish').addEventListener('click',()=>finishOnboarding(false));
+  $('su-skip-onb').addEventListener('click',()=>finishOnboarding(true));
+
+  // OAuth signup
+  $('su-github').addEventListener('click',async()=>{const{error}=await signInWithGitHub();if(error)showMsg('su-msg-1',error.message,'error');});
+  $('su-google').addEventListener('click',async()=>{if(!supabase){showMsg('su-msg-1','Supabase not available.','error');return;}const{error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href}});if(error)showMsg('su-msg-1',error.message,'error');});
+
+  async function saveProfileMeta(data){
+    if(!supabase||!currentUser)return;
+    try{
+      await supabase.from('profiles').upsert({
+        id:currentUser.id,first_name:data.fname||null,last_name:data.lname||null,dob:data.dob||null,
+        age_category:data.age_category||null,country:data.country||null,guardian_email:data.guardian_email||null,
+        guardian_status:data.guardian_status||'not_required',account_status:data.account_status||'active',
+        marketing_consent:data.marketing||false,updated_at:new Date().toISOString()
+      });
+    }catch(e){console.error('profile save',e);}
+  }
+
+  // ===== APP FUNCTIONALITY =====
+  $('submit-research').addEventListener('click',()=>{const q=$('research-question').value.trim();if(q)startResearch(q)});
+  $('research-question').addEventListener('keypress',e=>{if(e.key==='Enter'){const q=e.target.value.trim();if(q)startResearch(q)}});
+  document.querySelectorAll('.example-chip').forEach(c=>c.addEventListener('click',()=>{$('research-question').value=c.dataset.question;startResearch(c.dataset.question)}));
+  $('cancel-research').addEventListener('click',()=>{if(pollTimer)clearInterval(pollTimer);pollTimer=null;currentJob=null;setState('landing');});
+  $('open-settings').addEventListener('click',()=>openSettings('profile'));
+  $('sidebar-user').addEventListener('click',()=>openSettings('account'));
+  $('close-settings').addEventListener('click',()=>$('settings-modal').classList.remove('open'));
+  document.querySelector('.modal-backdrop').addEventListener('click',()=>$('settings-modal').classList.remove('open'));
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+  $('sign-out').addEventListener('click',signOut);
+
+  // Profile
+  $('pfp-wrap').addEventListener('click',()=>$('pfp-input').click());
+  $('pfp-input').addEventListener('change',async(e)=>{
+    const f=e.target.files[0];if(!f)return;clearMsg('prof-msg');
+    if(f.size>2*1024*1024){showMsg('prof-msg','Image must be under 2MB.','error');return;}
+    try{showMsg('prof-msg','Uploading…','info');
+      const path=`avatars/${currentUser.id}/${Date.now()}_${f.name}`;
+      const{error:upErr}=await supabase.storage.from('profiles').upload(path,f,{upsert:true});
+      if(upErr)throw upErr;
+      const{data:{publicUrl}}=supabase.storage.from('profiles').getPublicUrl(path);
+      await supabase.from('profiles').upsert({id:currentUser.id,avatar_url:publicUrl,updated_at:new Date().toISOString()});
+      updateAvatarUI(publicUrl);showMsg('prof-msg','Photo updated.','success');
+    }catch(err){showMsg('prof-msg',err.message,'error');}
+  });
+  $('save-profile').addEventListener('click',async()=>{
+    clearMsg('prof-msg');
+    const payload={id:currentUser.id,first_name:$('prof-fname').value.trim()||null,last_name:$('prof-lname').value.trim()||null,nickname:$('prof-nickname').value.trim()||null,dob:$('prof-dob').value||null,country:$('prof-country').value||null,bio:$('prof-bio').value.trim()||null,updated_at:new Date().toISOString()};
+    try{const{error}=await supabase.from('profiles').upsert(payload);if(error)throw error;updateAvatarUI();showMsg('prof-msg','Profile saved.','success');}catch(err){showMsg('prof-msg',err.message,'error');}
+  });
+
+  // Account
+  $('change-email').addEventListener('click',async()=>{
+    clearMsg('acc-msg');const ne=$('acc-new-email').value.trim();
+    if(!ne||!ne.includes('@')){showMsg('acc-msg','Enter a valid email.','error');return;}
+    try{const{error}=await supabase.auth.updateUser({email:ne});if(error)throw error;showMsg('acc-msg','Check your new email for a confirmation link.','success');}catch(err){showMsg('acc-msg',err.message,'error');}
+  });
+  $('change-password').addEventListener('click',async()=>{
+    clearMsg('acc-msg');const cur=$('acc-current-pw').value,nw=$('acc-new-pw').value,cf=$('acc-confirm-pw').value;
+    if(!cur||!nw){showMsg('acc-msg','Fill all password fields.','error');return;}
+    if(nw!==cf){showMsg('acc-msg','New passwords do not match.','error');return;}
+    if(nw.length<6){showMsg('acc-msg','Password must be at least 6 characters.','error');return;}
+    try{const{error}=await supabase.auth.updateUser({password:nw});if(error)throw error;$('acc-current-pw').value='';$('acc-new-pw').value='';$('acc-confirm-pw').value='';showMsg('acc-msg','Password updated.','success');}catch(err){showMsg('acc-msg',err.message,'error');}
+  });
+
+  // Data
+  $('export-json').addEventListener('click',async()=>{
+    clearMsg('data-msg');
+    try{const[{data:prof},{data:jobs}]=await Promise.all([supabase.from('profiles').select('*').eq('id',currentUser.id).single(),supabase.from('research_jobs').select('*').eq('user_id',currentUser.id)]);
+      const blob=new Blob([JSON.stringify({exported_at:new Date().toISOString(),profile:prof||{},research:jobs||[]},null,2)],{type:'application/json'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`nanofossil-export-${currentUser.id.slice(0,8)}.json`;a.click();showMsg('data-msg','Export downloaded.','success');
+    }catch(err){showMsg('data-msg',err.message,'error');}
+  });
+  $('download-chats').addEventListener('click',async()=>{
+    clearMsg('data-msg');
+    try{const{data:jobs,error}=await supabase.from('research_jobs').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});if(error)throw error;
+      let md='# Nanofossil Research History\n\n';(jobs||[]).forEach(j=>{md+=`## ${j.question}\n`;md+=`- **Status:** ${j.status}\n`;md+=`- **Date:** ${new Date(j.created_at).toLocaleString()}\n`;if(j.result_json){md+=`\n${typeof j.result_json==='string'?j.result_json:JSON.stringify(j.result_json,null,2)}\n`;}md+=`\n---\n\n`;});
+      const blob=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`nanofossil-chats-${currentUser.id.slice(0,8)}.md`;a.click();showMsg('data-msg','Chats downloaded.','success');
+    }catch(err){showMsg('data-msg',err.message,'error');}
+  });
+  $('delete-account').addEventListener('click',async()=>{
+    clearMsg('data-msg');
+    if(!confirm('This will permanently delete your account and all research history. Are you sure?'))return;
+    if(!confirm('Final confirmation. This cannot be undone.'))return;
+    showMsg('data-msg','Deleting…','info');
+    try{await supabase.from('research_jobs').delete().eq('user_id',currentUser.id);await supabase.from('profiles').delete().eq('id',currentUser.id);await supabase.auth.admin.deleteUser(currentUser.id);}catch(e){}
+    localStorage.clear();location.reload();
+  });
+
+  // Sidebar nav
+  $('nav-new-chat').addEventListener('click',()=>{setState('landing');$('research-question').focus();});
+
+});
+})();
+
+// Spawn many sweeping meteors
+  (function(){
+    const count=45;
+    for(let i=0;i<count;i++){
+      const m=document.createElement('div');
+      m.className='meteor';
+      const angle=-30-Math.random()*40;
+      m.style.setProperty('--angle',angle+'deg');
+      m.style.top=(Math.random()*25).toFixed(1)+'%';
+      m.style.left=(Math.random()*60+35).toFixed(1)+'%';
+      m.style.animationDelay=(Math.random()*20).toFixed(1)+'s';
+      m.style.animationDuration=(2.5+Math.random()*3.5).toFixed(1)+'s';
+      document.body.appendChild(m);
+    }
+  })();
+</script>
 </body>
 </html>
